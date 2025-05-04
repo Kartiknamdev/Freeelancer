@@ -1,55 +1,155 @@
-import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { HiMenuAlt1, HiBell, HiLogout } from 'react-icons/hi'
-import { useAuth } from '../../hooks/useAuth'
-import { useNotifications } from '../../hooks/useNotifications'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { HiMenuAlt1, HiBell, HiLogout } from 'react-icons/hi';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 const TopNav = ({ openSidebar }) => {
-  const { user, logout } = useAuth()
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const notificationsRef = useRef(null)
-  const userMenuRef = useRef(null)
-  
+  const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const notificationsRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const navigate = useNavigate();
+
+  // // Fetch user data from the backend
+  // useEffect(() => {
+  //   const fetchUser = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       if (!token) {
+  //         navigate('/login');
+  //         return;
+  //       }
+
+  //       const response = await axios.get('https://api.example.com/auth/me', {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setUser(response.data);
+  //     } catch (error) {
+  //       console.error('Error fetching user:', error);
+  //       navigate('/login');
+  //     }
+  //   };
+
+  //   fetchUser();
+  // }, [navigate]);
+
+  // // Fetch notifications from the backend
+  // useEffect(() => {
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       if (!token) return;
+
+  //       const response = await axios.get('https://api.example.com/notifications', {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setNotifications(response.data);
+  //       setUnreadCount(response.data.filter((n) => !n.read).length);
+  //     } catch (error) {
+  //       console.error('Error fetching notifications:', error);
+  //     }
+  //   };
+
+  //   fetchNotifications();
+  // }, []);
+
+  // // Mark a notification as read
+  // const markAsRead = async (notificationId) => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     if (!token) return;
+
+  //     await axios.post(
+  //       `https://api.example.com/notifications/${notificationId}/read`,
+  //       {},
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     setNotifications((prev) =>
+  //       prev.map((n) =>
+  //         n.id === notificationId ? { ...n, read: true } : n
+  //       )
+  //     );
+  //     setUnreadCount((prev) => prev - 1);
+  //   } catch (error) {
+  //     console.error('Error marking notification as read:', error);
+  //   }
+  // };
+
+  // // Mark all notifications as read
+  // const markAllAsRead = async () => {
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     if (!token) return;
+
+  //     await axios.post(
+  //       'https://api.example.com/notifications/mark-all-read',
+  //       {},
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     setNotifications((prev) =>
+  //       prev.map((n) => ({ ...n, read: true }))
+  //     );
+  //     setUnreadCount(0);
+  //   } catch (error) {
+  //     console.error('Error marking all notifications as read:', error);
+  //   }
+  // };
+
+  // Logout function
+  const logout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
-        setNotificationsOpen(false)
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setUserMenuOpen(false)
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-  
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (
+  //       notificationsRef.current &&
+  //       !notificationsRef.current.contains(event.target)
+  //     ) {
+  //       setNotificationsOpen(false);
+  //     }
+  //     if (
+  //       userMenuRef.current &&
+  //       !userMenuRef.current.contains(event.target)
+  //     ) {
+  //       setUserMenuOpen(false);
+  //     }
+  //   };
+
+  //   document.addEventListener('mousedown', handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside);
+  //   };
+  // }, []);
+
   // Animation variants
   const dropdownVariants = {
     hidden: { opacity: 0, y: -10, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       scale: 1,
-      transition: { 
-        type: 'spring', 
-        stiffness: 300, 
-        damping: 30
-      }
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 30,
+      },
     },
-    exit: { 
-      opacity: 0, 
-      y: -10, 
+    exit: {
+      opacity: 0,
+      y: -10,
       scale: 0.95,
-      transition: { duration: 0.15 }
-    }
-  }
+      transition: { duration: 0.15 },
+    },
+  };
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -66,7 +166,7 @@ const TopNav = ({ openSidebar }) => {
               <HiMenuAlt1 className="h-6 w-6" />
             </button>
           </div>
-          
+
           <div className="flex items-center">
             {/* Notifications dropdown */}
             <div className="relative mr-4" ref={notificationsRef}>
@@ -83,7 +183,7 @@ const TopNav = ({ openSidebar }) => {
                   </span>
                 )}
               </button>
-              
+
               <AnimatePresence>
                 {notificationsOpen && (
                   <motion.div
@@ -94,9 +194,11 @@ const TopNav = ({ openSidebar }) => {
                     exit="exit"
                   >
                     <div className="py-2 px-4 flex justify-between items-center border-b border-gray-100">
-                      <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Notifications
+                      </h3>
                       {notifications.length > 0 && (
-                        <button 
+                        <button
                           className="text-xs text-primary-600 hover:text-primary-800"
                           onClick={markAllAsRead}
                         >
@@ -104,7 +206,7 @@ const TopNav = ({ openSidebar }) => {
                         </button>
                       )}
                     </div>
-                    
+
                     <div className="max-h-60 overflow-y-auto py-1">
                       {notifications.length === 0 ? (
                         <p className="py-4 px-4 text-sm text-gray-500 text-center">
@@ -112,23 +214,29 @@ const TopNav = ({ openSidebar }) => {
                         </p>
                       ) : (
                         notifications.slice(0, 5).map((notification) => (
-                          <div 
+                          <div
                             key={notification.id}
-                            className={`px-4 py-2 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-primary-50' : ''}`}
+                            className={`px-4 py-2 hover:bg-gray-50 cursor-pointer ${
+                              !notification.read ? 'bg-primary-50' : ''
+                            }`}
                             onClick={() => markAsRead(notification.id)}
                           >
-                            <p className="text-sm text-gray-800">{notification.content}</p>
+                            <p className="text-sm text-gray-800">
+                              {notification.content}
+                            </p>
                             <p className="text-xs text-gray-500 mt-1">
-                              {new Date(notification.timestamp).toLocaleString()}
+                              {new Date(
+                                notification.timestamp
+                              ).toLocaleString()}
                             </p>
                           </div>
                         ))
                       )}
                     </div>
-                    
+
                     {notifications.length > 0 && (
                       <div className="py-2 px-4 border-t border-gray-100">
-                        <Link 
+                        <Link
                           to="#view-all"
                           className="text-xs text-primary-600 hover:text-primary-800"
                           onClick={() => setNotificationsOpen(false)}
@@ -141,7 +249,7 @@ const TopNav = ({ openSidebar }) => {
                 )}
               </AnimatePresence>
             </div>
-            
+
             {/* User menu */}
             <div className="relative" ref={userMenuRef}>
               <button
@@ -151,14 +259,17 @@ const TopNav = ({ openSidebar }) => {
               >
                 <img
                   className="h-8 w-8 rounded-full object-cover"
-                  src={user?.avatar || "https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100"}
+                  src={
+                    user?.avatar ||
+                    'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100'
+                  }
                   alt="User avatar"
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700 hidden sm:block">
                   {user?.name || 'User'}
                 </span>
               </button>
-              
+
               <AnimatePresence>
                 {userMenuOpen && (
                   <motion.div
@@ -170,14 +281,14 @@ const TopNav = ({ openSidebar }) => {
                   >
                     <div className="py-1">
                       <Link
-                        to="/profile"
+                        to="/dashboardLayout/profile"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         Profile
                       </Link>
                       <Link
-                        to="/settings"
+                        to="/dashboardLayout/settings"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
                       >
@@ -186,8 +297,8 @@ const TopNav = ({ openSidebar }) => {
                       <button
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                         onClick={() => {
-                          logout()
-                          setUserMenuOpen(false)
+                          logout();
+                          setUserMenuOpen(false);
                         }}
                       >
                         <HiLogout className="mr-2 h-4 w-4" />
@@ -202,7 +313,7 @@ const TopNav = ({ openSidebar }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default TopNav
+export default TopNav;

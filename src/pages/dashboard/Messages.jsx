@@ -1,119 +1,164 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { HiSearch, HiChat } from 'react-icons/hi'
-import { format } from 'date-fns'
-import { useAuth } from '../../hooks/useAuth'
-import { mockConversations, mockMessages } from '../../data/mockData'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react';
+import { HiSearch, HiChat } from 'react-icons/hi';
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 
 const Messages = () => {
-  const { user } = useAuth()
-  const [conversations, setConversations] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedConversation, setSelectedConversation] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [newMessage, setNewMessage] = useState('')
-  
+  // Mock user data
+  const user = {
+    id: 'user123',
+    name: 'John Doe',
+    userType: 'worker',
+  };
+
+  // Mock conversations data
+  const mockConversations = [
+    {
+      id: 'conv1',
+      participants: ['user123', 'user_1'],
+    },
+    {
+      id: 'conv2',
+      participants: ['user123', 'user_2'],
+    },
+  ];
+
+  // Mock messages data
+  const mockMessages = [
+    {
+      id: 'msg1',
+      conversationId: 'conv1',
+      senderId: 'user123',
+      receiverId: 'user_1',
+      content: 'Hello, how can I help you?',
+      timestamp: '2025-05-01T10:00:00Z',
+      read: true,
+    },
+    {
+      id: 'msg2',
+      conversationId: 'conv1',
+      senderId: 'user_1',
+      receiverId: 'user123',
+      content: 'I need help with proofreading.',
+      timestamp: '2025-05-01T10:05:00Z',
+      read: true,
+    },
+    {
+      id: 'msg3',
+      conversationId: 'conv2',
+      senderId: 'user_2',
+      receiverId: 'user123',
+      content: 'Can you assist with editing?',
+      timestamp: '2025-05-02T14:00:00Z',
+      read: false,
+    },
+  ];
+
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+
   // Load conversations on mount
   useEffect(() => {
-    if (user) {
-      // Filter conversations that include the current user
-      const userConversations = mockConversations.filter(conv => 
-        conv.participants.includes(user.id)
-      )
-      
-      // Get the last message for each conversation
-      const conversationsWithDetails = userConversations.map(conv => {
-        const otherParticipantId = conv.participants.find(id => id !== user.id)
-        
-        // For demo, we'll use fixed user data
-        let name, avatar
-        if (otherParticipantId === 'user_1') {
-          name = 'Alex Johnson'
-          avatar = 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
-        } else {
-          name = 'Sarah Miller'
-          avatar = 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
-        }
-        
-        // Get the most recent message
-        const conversationMessages = mockMessages.filter(
-          msg => msg.conversationId === conv.id
-        )
-        
-        const lastMessage = conversationMessages.sort(
-          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-        )[0]
-        
-        // Count unread messages
-        const unreadCount = conversationMessages.filter(
-          msg => !msg.read && msg.receiverId === user.id
-        ).length
-        
-        return {
-          ...conv,
-          otherParticipant: {
-            id: otherParticipantId,
-            name,
-            avatar
-          },
-          lastMessage,
-          unreadCount
-        }
-      })
-      
-      // Sort by most recent message
-      conversationsWithDetails.sort(
-        (a, b) => new Date(b.lastMessage?.timestamp || 0) - new Date(a.lastMessage?.timestamp || 0)
-      )
-      
-      setConversations(conversationsWithDetails)
-      
-      // If we have conversations, select the first one
-      if (conversationsWithDetails.length > 0) {
-        setSelectedConversation(conversationsWithDetails[0])
-        
-        // Get messages for the first conversation
-        const firstConvMessages = mockMessages.filter(
-          msg => msg.conversationId === conversationsWithDetails[0].id
-        ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-        
-        setMessages(firstConvMessages)
-      }
-      
-      setLoading(false)
+    // Filter conversations that include the current user
+    const userConversations = mockConversations.filter((conv) =>
+      conv.participants.includes(user.id)
+    );
+
+    // Get the last message for each conversation
+    const conversationsWithDetails = userConversations.map((conv) => {
+      const otherParticipantId = conv.participants.find((id) => id !== user.id);
+
+      // Mock participant data
+      const otherParticipant =
+        otherParticipantId === 'user_1'
+          ? {
+              id: 'user_1',
+              name: 'Alex Johnson',
+              avatar:
+                'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+            }
+          : {
+              id: 'user_2',
+              name: 'Sarah Miller',
+              avatar:
+                'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+            };
+
+      // Get the most recent message
+      const conversationMessages = mockMessages.filter(
+        (msg) => msg.conversationId === conv.id
+      );
+
+      const lastMessage = conversationMessages.sort(
+        (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+      )[0];
+
+      // Count unread messages
+      const unreadCount = conversationMessages.filter(
+        (msg) => !msg.read && msg.receiverId === user.id
+      ).length;
+
+      return {
+        ...conv,
+        otherParticipant,
+        lastMessage,
+        unreadCount,
+      };
+    });
+
+    // Sort by most recent message
+    conversationsWithDetails.sort(
+      (a, b) =>
+        new Date(b.lastMessage?.timestamp || 0) -
+        new Date(a.lastMessage?.timestamp || 0)
+    );
+
+    setConversations(conversationsWithDetails);
+
+    // If we have conversations, select the first one
+    if (conversationsWithDetails.length > 0) {
+      setSelectedConversation(conversationsWithDetails[0]);
+
+      // Get messages for the first conversation
+      const firstConvMessages = mockMessages
+        .filter((msg) => msg.conversationId === conversationsWithDetails[0].id)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      setMessages(firstConvMessages);
     }
-  }, [user])
-  
+
+    setLoading(false);
+  }, []);
+
   // Handle conversation selection
   const handleSelectConversation = (conversation) => {
-    setSelectedConversation(conversation)
-    
+    setSelectedConversation(conversation);
+
     // Get messages for this conversation
-    const conversationMessages = mockMessages.filter(
-      msg => msg.conversationId === conversation.id
-    ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
-    
-    setMessages(conversationMessages)
-    
+    const conversationMessages = mockMessages
+      .filter((msg) => msg.conversationId === conversation.id)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    setMessages(conversationMessages);
+
     // Mark messages as read (in a real app, this would be an API call)
-    // For demo, we'll just update the UI
-    setConversations(prevConversations => 
-      prevConversations.map(conv => 
-        conv.id === conversation.id
-          ? { ...conv, unreadCount: 0 }
-          : conv
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv.id === conversation.id ? { ...conv, unreadCount: 0 } : conv
       )
-    )
-  }
-  
+    );
+  };
+
   // Handle sending a new message
   const handleSendMessage = (e) => {
-    e.preventDefault()
-    
-    if (!newMessage.trim() || !selectedConversation) return
-    
+    e.preventDefault();
+
+    if (!newMessage.trim() || !selectedConversation) return;
+
     // Create new message
     const newMsg = {
       id: `msg_new_${Date.now()}`,
@@ -122,34 +167,32 @@ const Messages = () => {
       receiverId: selectedConversation.otherParticipant.id,
       content: newMessage,
       timestamp: new Date().toISOString(),
-      read: false
-    }
-    
+      read: false,
+    };
+
     // Update messages state
-    setMessages([...messages, newMsg])
-    
+    setMessages([...messages, newMsg]);
+
     // Update conversation with new last message
-    setConversations(prevConversations => 
-      prevConversations.map(conv => 
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
         conv.id === selectedConversation.id
-          ? { 
-              ...conv, 
-              lastMessage: newMsg
+          ? {
+              ...conv,
+              lastMessage: newMsg,
             }
           : conv
       )
-    )
-    
+    );
+
     // Clear input
-    setNewMessage('')
-    
-    // In a real app, you would send this to your API
-  }
-  
+    setNewMessage('');
+  };
+
   // Filter conversations by search term
-  const filteredConversations = conversations.filter(conv => 
+  const filteredConversations = conversations.filter((conv) =>
     conv.otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
   return (
     <div>
@@ -159,7 +202,7 @@ const Messages = () => {
           Communicate with clients and workers
         </p>
       </div>
-      
+
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-[600px]">
           {/* Conversations sidebar */}
@@ -178,7 +221,7 @@ const Messages = () => {
                 />
               </div>
             </div>
-            
+
             <div className="h-[calc(600px-73px)] overflow-y-auto">
               {loading ? (
                 <div className="flex justify-center items-center h-full">
@@ -191,13 +234,15 @@ const Messages = () => {
               ) : (
                 <ul className="divide-y divide-gray-200">
                   {filteredConversations.map((conversation) => (
-                    <motion.li 
+                    <motion.li
                       key={conversation.id}
                       whileTap={{ backgroundColor: '#F3F4F6' }}
                     >
                       <button
                         className={`w-full text-left px-4 py-3 hover:bg-gray-100 focus:outline-none ${
-                          selectedConversation?.id === conversation.id ? 'bg-gray-100' : ''
+                          selectedConversation?.id === conversation.id
+                            ? 'bg-gray-100'
+                            : ''
                         }`}
                         onClick={() => handleSelectConversation(conversation)}
                       >
@@ -214,14 +259,19 @@ const Messages = () => {
                               </p>
                               {conversation.lastMessage && (
                                 <p className="text-xs text-gray-500">
-                                  {format(new Date(conversation.lastMessage.timestamp), 'h:mm a')}
+                                  {format(
+                                    new Date(conversation.lastMessage.timestamp),
+                                    'h:mm a'
+                                  )}
                                 </p>
                               )}
                             </div>
                             <div className="flex items-center justify-between">
                               {conversation.lastMessage ? (
                                 <p className="text-xs text-gray-500 truncate">
-                                  {conversation.lastMessage.senderId === user.id ? 'You: ' : ''}
+                                  {conversation.lastMessage.senderId === user.id
+                                    ? 'You: '
+                                    : ''}
                                   {conversation.lastMessage.content}
                                 </p>
                               ) : (
@@ -244,7 +294,7 @@ const Messages = () => {
               )}
             </div>
           </div>
-          
+
           {/* Chat area */}
           <div className="col-span-2 md:col-span-2 lg:col-span-3 flex flex-col h-full">
             {selectedConversation ? (
@@ -262,22 +312,25 @@ const Messages = () => {
                         {selectedConversation.otherParticipant.name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {selectedConversation.otherParticipant.id === 'user_1' 
-                          ? 'Client' : 'Worker'}
+                        {selectedConversation.otherParticipant.id === 'user_1'
+                          ? 'Client'
+                          : 'Worker'}
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Chat messages */}
                 <div className="flex-1 p-4 overflow-y-auto">
                   {messages.map((message, index) => {
-                    const isCurrentUser = message.senderId === user.id
-                    
+                    const isCurrentUser = message.senderId === user.id;
+
                     return (
-                      <div 
+                      <div
                         key={message.id}
-                        className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}
+                        className={`flex ${
+                          isCurrentUser ? 'justify-end' : 'justify-start'
+                        } mb-4`}
                       >
                         {!isCurrentUser && (
                           <img
@@ -289,25 +342,32 @@ const Messages = () => {
                         <div
                           className={`
                             max-w-xs lg:max-w-md px-4 py-2 rounded-lg
-                            ${isCurrentUser 
-                              ? 'bg-primary-600 text-white' 
-                              : 'bg-gray-100 text-gray-800'
+                            ${
+                              isCurrentUser
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-gray-100 text-gray-800'
                             }
                           `}
                         >
                           <p className="text-sm">{message.content}</p>
-                          <p className={`
+                          <p
+                            className={`
                             text-xs mt-1
-                            ${isCurrentUser ? 'text-primary-100' : 'text-gray-500'}
-                          `}>
+                            ${
+                              isCurrentUser
+                                ? 'text-primary-100'
+                                : 'text-gray-500'
+                            }
+                          `}
+                          >
                             {format(new Date(message.timestamp), 'h:mm a')}
                           </p>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
-                
+
                 {/* Chat input */}
                 <div className="p-4 border-t border-gray-200">
                   <form onSubmit={handleSendMessage} className="flex">
@@ -332,14 +392,16 @@ const Messages = () => {
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <HiChat className="h-16 w-16 text-gray-300 mb-4" />
                 <p className="mb-1">No conversation selected</p>
-                <p className="text-sm">Select a conversation from the list to start chatting</p>
+                <p className="text-sm">
+                  Select a conversation from the list to start chatting
+                </p>
               </div>
             )}
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Messages
+export default Messages;

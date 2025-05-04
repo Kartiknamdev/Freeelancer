@@ -21,7 +21,13 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div>
+    <div className="w-screen h-screen flex justify-center items-center bg-gray-100">
+      <motion.div
+        className="w-full max-w-md bg-white shadow-lg rounded-lg p-6 md:p-8"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
       <h2 className="text-center text-2xl font-bold mb-6">Reset your password</h2>
       
       {success ? (
@@ -95,6 +101,7 @@ const ForgotPassword = () => {
           </div>
         </>
       )}
+       </motion.div>
     </div>
   )
 }

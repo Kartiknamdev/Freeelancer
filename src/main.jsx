@@ -1,22 +1,15 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App.jsx'
-import './index.css'
-import { AuthProvider } from './contexts/AuthContext.jsx'
-import { TasksProvider } from './contexts/TasksContext.jsx'
-import { NotificationsProvider } from './contexts/NotificationsContext.jsx'
+import { StrictMode, Suspense } from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
+import { Router } from "./routes.jsx";
+import App from "./App.jsx";
+import "./index.css";
+import LoadingScreen from './components/ui/LoadingScreen.jsx'
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <TasksProvider>
-          <NotificationsProvider>
-            <App />
-          </NotificationsProvider>
-        </TasksProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>,
-)
+    <Suspense fallback={<LoadingScreen />}>
+      <RouterProvider router={Router}/>
+    </Suspense>
+  </StrictMode>
+);

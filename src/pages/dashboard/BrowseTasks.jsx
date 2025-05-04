@@ -1,85 +1,127 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { HiSearch, HiFilter, HiX, HiCurrencyDollar, HiCalendar, HiTag } from 'react-icons/hi'
-import { format, isPast } from 'date-fns'
-import { useTasks } from '../../hooks/useTasks'
-import { useAuth } from '../../hooks/useAuth'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { HiSearch, HiFilter, HiX, HiCurrencyDollar, HiCalendar, HiTag } from 'react-icons/hi';
+import { format, isPast } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const BrowseTasks = () => {
-  const { tasks, loading } = useTasks()
-  const { user } = useAuth()
-  
-  const [searchTerm, setSearchTerm] = useState('')
-  const [category, setCategory] = useState('')
-  const [minBudget, setMinBudget] = useState('')
-  const [maxBudget, setMaxBudget] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-  
-  const [filteredTasks, setFilteredTasks] = useState([])
-  
+  // Mock user data
+  const user = {
+    id: 'user123',
+    name: 'John Doe',
+    userType: 'worker',
+  };
+
+  // Mock tasks data
+  const tasks = [
+    {
+      id: 'task1',
+      title: 'Proofread a 10-page document',
+      description: 'Need someone to proofread and edit a 10-page document.',
+      category: 'Proofreading',
+      budget: 100,
+      deadline: '2025-05-10',
+      createdAt: '2025-05-01',
+      status: 'open',
+      createdBy: 'user456',
+      tags: ['proofreading', 'editing', 'grammar'],
+    },
+    {
+      id: 'task2',
+      title: 'Research on climate change',
+      description: 'Looking for a detailed research report on climate change.',
+      category: 'Research',
+      budget: 200,
+      deadline: '2025-05-15',
+      createdAt: '2025-05-02',
+      status: 'open',
+      createdBy: 'user789',
+      tags: ['research', 'climate', 'environment'],
+    },
+    {
+      id: 'task3',
+      title: 'Edit a blog post',
+      description: 'Need help editing a blog post for clarity and grammar.',
+      category: 'Editing',
+      budget: 50,
+      deadline: '2025-05-05',
+      createdAt: '2025-04-30',
+      status: 'closed',
+      createdBy: 'user123', // Created by the current user
+      tags: ['editing', 'blog', 'content'],
+    },
+  ];
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [category, setCategory] = useState('');
+  const [minBudget, setMinBudget] = useState('');
+  const [maxBudget, setMaxBudget] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filteredTasks, setFilteredTasks] = useState([]);
+
   // Categories extracted from tasks
-  const categories = [...new Set(tasks.map(task => task.category))].filter(Boolean).sort()
-  
+  const categories = [...new Set(tasks.map((task) => task.category))].filter(Boolean).sort();
+
   // Filter tasks
   useEffect(() => {
-    if (loading) return
-    
-    let filtered = tasks.filter(task => {
+    let filtered = tasks.filter((task) => {
       // Only show open tasks
-      if (task.status !== 'open') return false
-      
+      if (task.status !== 'open') return false;
+
       // Don't show own tasks
-      if (task.createdBy === user?.id) return false
-      
+      if (task.createdBy === user.id) return false;
+
       // Don't show tasks where deadline has passed
-      if (isPast(new Date(task.deadline))) return false
-      
+      if (isPast(new Date(task.deadline))) return false;
+
       // Search term filter
-      if (searchTerm && !task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !task.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !task.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))) {
-        return false
+      if (
+        searchTerm &&
+        !task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !task.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !task.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) {
+        return false;
       }
-      
+
       // Category filter
-      if (category && task.category !== category) return false
-      
+      if (category && task.category !== category) return false;
+
       // Budget filters
-      if (minBudget && task.budget < parseFloat(minBudget)) return false
-      if (maxBudget && task.budget > parseFloat(maxBudget)) return false
-      
-      return true
-    })
-    
+      if (minBudget && task.budget < parseFloat(minBudget)) return false;
+      if (maxBudget && task.budget > parseFloat(maxBudget)) return false;
+
+      return true;
+    });
+
     // Sort by newest first
-    filtered = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    
-    setFilteredTasks(filtered)
-  }, [tasks, loading, searchTerm, category, minBudget, maxBudget, user])
-  
+    filtered = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    setFilteredTasks(filtered);
+  }, [tasks, searchTerm, category, minBudget, maxBudget, user.id]);
+
   // Reset filters
   const resetFilters = () => {
-    setSearchTerm('')
-    setCategory('')
-    setMinBudget('')
-    setMaxBudget('')
-  }
-  
+    setSearchTerm('');
+    setCategory('');
+    setMinBudget('');
+    setMaxBudget('');
+  };
+
   // Animation variants
   const filtersVariants = {
     hidden: { height: 0, opacity: 0 },
-    visible: { 
-      height: 'auto', 
+    visible: {
+      height: 'auto',
       opacity: 1,
-      transition: { duration: 0.3 }
+      transition: { duration: 0.3 },
     },
     exit: {
       height: 0,
       opacity: 0,
-      transition: { duration: 0.2 }
-    }
-  }
+      transition: { duration: 0.2 },
+    },
+  };
 
   return (
     <div>
@@ -89,7 +131,7 @@ const BrowseTasks = () => {
           Find document-related tasks that match your skills
         </p>
       </div>
-      
+
       {/* Search and filters */}
       <div className="mb-6">
         <div className="flex flex-wrap gap-3">
@@ -113,7 +155,7 @@ const BrowseTasks = () => {
               </button>
             )}
           </div>
-          
+
           <button
             className="btn-outline inline-flex items-center"
             onClick={() => setShowFilters(!showFilters)}
@@ -122,7 +164,7 @@ const BrowseTasks = () => {
             Filters
           </button>
         </div>
-        
+
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -151,7 +193,7 @@ const BrowseTasks = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="min-budget" className="form-label">
                     Min Budget
@@ -171,7 +213,7 @@ const BrowseTasks = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label htmlFor="max-budget" className="form-label">
                     Max Budget
@@ -192,7 +234,7 @@ const BrowseTasks = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-4 flex justify-end">
                 <button
                   type="button"
@@ -206,15 +248,10 @@ const BrowseTasks = () => {
           )}
         </AnimatePresence>
       </div>
-      
+
       {/* Tasks list */}
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
-        {loading ? (
-          <div className="p-6 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-l-primary-600"></div>
-            <p className="mt-2 text-gray-500">Loading tasks...</p>
-          </div>
-        ) : filteredTasks.length === 0 ? (
+        {filteredTasks.length === 0 ? (
           <div className="p-8 text-center">
             <div className="mx-auto h-12 w-12 text-gray-400">
               <HiSearch className="h-12 w-12" />
@@ -235,13 +272,13 @@ const BrowseTasks = () => {
         ) : (
           <ul className="divide-y divide-gray-200">
             {filteredTasks.map((task) => (
-              <motion.li 
+              <motion.li
                 key={task.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Link 
+                <Link
                   to={`/tasks/${task.id}`}
                   className="block hover:bg-gray-50 transition-colors"
                 >
@@ -254,32 +291,35 @@ const BrowseTasks = () => {
                         ${task.budget}
                       </div>
                     </div>
-                    
+
                     <div className="mt-2">
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {task.description}
                       </p>
                     </div>
-                    
+
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <div className="badge-primary flex items-center">
                         <HiTag className="h-3 w-3 mr-1" />
                         {task.category}
                       </div>
-                      
+
                       <div className="text-xs text-gray-500 flex items-center">
                         <HiCalendar className="h-3 w-3 mr-1" />
                         Deadline: {format(new Date(task.deadline), 'MMM d, yyyy')}
                       </div>
-                      
+
                       <div className="text-xs text-gray-500">
                         Posted: {format(new Date(task.createdAt), 'MMM d, yyyy')}
                       </div>
-                      
+
                       {task.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {task.tags.slice(0, 3).map((tag, index) => (
-                            <span key={index} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                            <span
+                              key={index}
+                              className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
+                            >
                               {tag}
                             </span>
                           ))}
@@ -299,7 +339,7 @@ const BrowseTasks = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default BrowseTasks
+export default BrowseTasks;

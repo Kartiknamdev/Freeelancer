@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { HiOutlineDocument, HiOutlineCurrencyDollar, HiOutlineCalendar, HiOutlineTag } from 'react-icons/hi'
-import { useAuth } from '../../hooks/useAuth'
-import { useTasks } from '../../hooks/useTasks'
-import { useNotifications } from '../../hooks/useNotifications'
+
 import { motion } from 'framer-motion'
 
 const categories = [
@@ -19,9 +17,11 @@ const categories = [
 ]
 
 const CreateTask = () => {
-  const { user } = useAuth()
-  const { createTask } = useTasks()
-  const { addNotification } = useNotifications()
+ 
+  const user =" hello"
+  const createTask =" hello"
+  const addNotification =" hello"
+  
   const navigate = useNavigate()
   
   const [title, setTitle] = useState('')

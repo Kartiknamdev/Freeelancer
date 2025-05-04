@@ -1,14 +1,14 @@
 import React from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Features from './components/Features';
-import Testimonials from './components/Testimonials';
-import Pricing from './components/Pricing';
-import FAQ from './components/FAQ';
-import Newsletter from './components/Newsletter';
-import Footer from './components/Footer';
+import Navbar from './Navbar';
+import Hero from './Hero';
+import Features from './Features';
+import Testimonials from './Testimonials';
+import Pricing from './Pricing';
+import FAQ from './FAQ';
+import Newsletter from './Newsletter';
+import Footer from './Footer';
 
-function App() {
+function Landing() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -23,4 +23,4 @@ function App() {
   );
 }
 
-export default App;
+export default Landing;

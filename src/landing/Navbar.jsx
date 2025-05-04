@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-scroll';
+import { NavLink } from 'react-router-dom';
 import logo from "../assets/logo1.png";
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -28,7 +28,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <Link to="hero" smooth={true} duration={500}>
+          <NavLink to="hero" smooth={true} duration={500}>
             <div className="flex items-center space-x-2 cursor-pointer">
               <img
                 src={logo}
@@ -38,7 +38,7 @@ const Navbar = () => {
               />
               <span className="text-xl font-bold text-blue-600">PeerTask</span>
             </div>
-          </Link>
+          </NavLink>
         </div>
 
         <div
@@ -59,7 +59,7 @@ const Navbar = () => {
         >
           <ul className="flex flex-col items-center space-y-6 md:flex-row md:space-y-0 md:space-x-6">
             <li>
-              <Link
+              <NavLink
                 to="features"
                 smooth={true}
                 duration={500}
@@ -68,10 +68,10 @@ const Navbar = () => {
                 className="text-gray-800 hover:text-blue-500 transition"
               >
                 Features
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="how-it-works"
                 smooth={true}
                 duration={500}
@@ -80,10 +80,10 @@ const Navbar = () => {
                 className="text-gray-800 hover:text-blue-500 transition"
               >
                 How It Works
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="testimonials"
                 smooth={true}
                 duration={500}
@@ -92,10 +92,10 @@ const Navbar = () => {
                 className="text-gray-800 hover:text-blue-500 transition"
               >
                 Testimonials
-              </Link>
+              </NavLink>
             </li>
             <li>
-              <Link
+              <NavLink
                 to="faq"
                 smooth={true}
                 duration={500}
@@ -104,17 +104,17 @@ const Navbar = () => {
                 className="text-gray-800 hover:text-blue-500 transition"
               >
                 FAQ
-              </Link>
+              </NavLink>
             </li>
           </ul>
           </div>
           <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-            <button className="px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition">
+            <NavLink to='login' className="px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition">
               Log In
-            </button>
-            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+            </NavLink>
+            <NavLink to='signup' className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
               Sign Up
-            </button>
+            </NavLink>
           </div>
           </div>
     </nav>
