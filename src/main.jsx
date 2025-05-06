@@ -5,11 +5,14 @@ import { Router } from "./routes.jsx";
 import App from "./App.jsx";
 import "./index.css";
 import LoadingScreen from './components/ui/LoadingScreen.jsx'
+import { TaskProvider } from "./contextStore/task.context.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <TaskProvider>
     <Suspense fallback={<LoadingScreen />}>
       <RouterProvider router={Router}/>
     </Suspense>
+    </TaskProvider>
   </StrictMode>
 );

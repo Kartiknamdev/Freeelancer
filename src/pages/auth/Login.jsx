@@ -12,7 +12,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Add your login logic here
-    navigate('/dashboardLayout')
+    navigate('/dashboardLayout/dashboard')
     console.log('Form submitted:', { email, password });
   };
 
@@ -28,7 +28,7 @@ const Login = () => {
       // Simulate saving a token for demo purposes
       localStorage.setItem('token', 'demo-token');
       localStorage.setItem('user', JSON.stringify(demoCredentials));
-      navigate('/dashboardLayout');
+      navigate('/dashboardLayout/dashboard');
     } catch (err) {
       setError('Demo login failed');
       setLoading(false);

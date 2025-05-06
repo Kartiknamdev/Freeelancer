@@ -1,72 +1,45 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { HiSearch, HiFilter, HiX, HiCurrencyDollar, HiCalendar, HiTag } from 'react-icons/hi';
-import { format, isPast } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo, useContext } from "react";
+import { Link } from "react-router-dom";
+import {
+  HiSearch,
+  HiFilter,
+  HiX,
+  HiCurrencyDollar,
+  HiCalendar,
+  HiTag,
+} from "react-icons/hi";
+import { format, isPast } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+import TaskInfo from "./TaskInfo";
+import { useTasks } from "../../contextStore/task.context";
 
 const BrowseTasks = () => {
-  // Mock user data
+  const tasks = useTasks();
+// Mock user data
   const user = {
-    id: 'user123',
-    name: 'John Doe',
-    userType: 'worker',
+    id: "user123",
+    name: "John Doe",
+    userType: "worker",
   };
 
-  // Mock tasks data
-  const tasks = [
-    {
-      id: 'task1',
-      title: 'Proofread a 10-page document',
-      description: 'Need someone to proofread and edit a 10-page document.',
-      category: 'Proofreading',
-      budget: 100,
-      deadline: '2025-05-10',
-      createdAt: '2025-05-01',
-      status: 'open',
-      createdBy: 'user456',
-      tags: ['proofreading', 'editing', 'grammar'],
-    },
-    {
-      id: 'task2',
-      title: 'Research on climate change',
-      description: 'Looking for a detailed research report on climate change.',
-      category: 'Research',
-      budget: 200,
-      deadline: '2025-05-15',
-      createdAt: '2025-05-02',
-      status: 'open',
-      createdBy: 'user789',
-      tags: ['research', 'climate', 'environment'],
-    },
-    {
-      id: 'task3',
-      title: 'Edit a blog post',
-      description: 'Need help editing a blog post for clarity and grammar.',
-      category: 'Editing',
-      budget: 50,
-      deadline: '2025-05-05',
-      createdAt: '2025-04-30',
-      status: 'closed',
-      createdBy: 'user123', // Created by the current user
-      tags: ['editing', 'blog', 'content'],
-    },
-  ];
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('');
-  const [minBudget, setMinBudget] = useState('');
-  const [maxBudget, setMaxBudget] = useState('');
+  // State for filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState("");
+  const [minBudget, setMinBudget] = useState("");
+  const [maxBudget, setMaxBudget] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filteredTasks, setFilteredTasks] = useState([]);
 
   // Categories extracted from tasks
-  const categories = [...new Set(tasks.map((task) => task.category))].filter(Boolean).sort();
+  const categories = [...new Set(tasks.map((task) => task.category))]
+    .filter(Boolean)
+    .sort();
 
   // Filter tasks
   useEffect(() => {
     let filtered = tasks.filter((task) => {
       // Only show open tasks
-      if (task.status !== 'open') return false;
+      if (task.status !== "open") return false;
 
       // Don't show own tasks
       if (task.createdBy === user.id) return false;
@@ -79,7 +52,9 @@ const BrowseTasks = () => {
         searchTerm &&
         !task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !task.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !task.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        !task.tags.some((tag) =>
+          tag.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       ) {
         return false;
       }
@@ -95,32 +70,20 @@ const BrowseTasks = () => {
     });
 
     // Sort by newest first
-    filtered = filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    filtered = filtered.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
 
     setFilteredTasks(filtered);
-  }, [tasks, searchTerm, category, minBudget, maxBudget, user.id]);
+ // Debug statement for filtered tasks
+  }, [tasks, searchTerm, category, minBudget, maxBudget]);
 
   // Reset filters
   const resetFilters = () => {
-    setSearchTerm('');
-    setCategory('');
-    setMinBudget('');
-    setMaxBudget('');
-  };
-
-  // Animation variants
-  const filtersVariants = {
-    hidden: { height: 0, opacity: 0 },
-    visible: {
-      height: 'auto',
-      opacity: 1,
-      transition: { duration: 0.3 },
-    },
-    exit: {
-      height: 0,
-      opacity: 0,
-      transition: { duration: 0.2 },
-    },
+    setSearchTerm("");
+    setCategory("");
+    setMinBudget("");
+    setMaxBudget("");
   };
 
   return (
@@ -149,7 +112,7 @@ const BrowseTasks = () => {
             {searchTerm && (
               <button
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setSearchTerm('')}
+                onClick={() => setSearchTerm("")}
               >
                 <HiX className="h-5 w-5 text-gray-400 hover:text-gray-600" />
               </button>
@@ -256,9 +219,12 @@ const BrowseTasks = () => {
             <div className="mx-auto h-12 w-12 text-gray-400">
               <HiSearch className="h-12 w-12" />
             </div>
-            <h3 className="mt-2 text-base font-medium text-gray-900">No tasks found</h3>
+            <h3 className="mt-2 text-base font-medium text-gray-900">
+              No tasks found
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
-              Try adjusting your search or filter criteria to find what you're looking for.
+              Try adjusting your search or filter criteria to find what you're
+              looking for.
             </p>
             {(searchTerm || category || minBudget || maxBudget) && (
               <button
@@ -271,70 +237,55 @@ const BrowseTasks = () => {
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {filteredTasks.map((task) => (
-              <motion.li
-                key={task.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Link
-                  to={`/tasks/${task.id}`}
-                  className="block hover:bg-gray-50 transition-colors"
+            {filteredTasks.map((task) => {
+              // console.log("Rendering task:", task); // Debug statement for each task
+              // console.log("Task ID:", task.id); // Debug statement for task ID
+              return (
+                <motion.li
+                  key={task.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <div className="px-6 py-4">
-                    <div className="sm:flex sm:justify-between sm:items-baseline">
-                      <h3 className="text-base font-medium text-gray-900">
-                        {task.title}
-                      </h3>
-                      <div className="mt-1 sm:mt-0 text-sm font-medium text-success-600">
-                        ${task.budget}
-                      </div>
-                    </div>
-
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {task.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <div className="badge-primary flex items-center">
-                        <HiTag className="h-3 w-3 mr-1" />
-                        {task.category}
-                      </div>
-
-                      <div className="text-xs text-gray-500 flex items-center">
-                        <HiCalendar className="h-3 w-3 mr-1" />
-                        Deadline: {format(new Date(task.deadline), 'MMM d, yyyy')}
-                      </div>
-
-                      <div className="text-xs text-gray-500">
-                        Posted: {format(new Date(task.createdAt), 'MMM d, yyyy')}
-                      </div>
-
-                      {task.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {task.tags.slice(0, 3).map((tag, index) => (
-                            <span
-                              key={index}
-                              className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {task.tags.length > 3 && (
-                            <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-                              +{task.tags.length - 3}
-                            </span>
-                          )}
+                  <Link
+                    to={`/dashboardLayout/browse-tasks/task-info`}
+                    state={{ task }}
+                    className="block hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="px-6 py-4">
+                      <div className="sm:flex sm:justify-between sm:items-baseline">
+                        <h3 className="text-base font-medium text-gray-900">
+                          {task.title}
+                        </h3>
+                        <div className="mt-1 sm:mt-0 text-sm font-medium text-success-600">
+                          ${task.budget}
                         </div>
-                      )}
+                      </div>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {task.description}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <div className="badge-primary flex items-center">
+                          <HiTag className="h-3 w-3 mr-1" />
+                          {task.category}
+                        </div>
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <HiCalendar className="h-3 w-3 mr-1" />
+                          Deadline:{" "}
+                          {format(new Date(task.deadline), "MMM d, yyyy")}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Posted:{" "}
+                          {format(new Date(task.createdAt), "MMM d, yyyy")}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.li>
-            ))}
+                  </Link>
+                </motion.li>
+              );
+            })}
           </ul>
         )}
       </div>
