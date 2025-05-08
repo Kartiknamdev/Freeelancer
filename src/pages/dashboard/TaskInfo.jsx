@@ -1,15 +1,15 @@
-import React from 'react';
-import { useLocation, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
-
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useTasks } from "../../contextStore/task.context";
+import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 export default function TaskInfo() {
-  
-  // Find the task by ID
-const location =useLocation();
-const task = location.state?.task;
+  const { taskId } = useParams();
+  const navigate = useNavigate();
+  const { tasks } = useTasks();
 
-console.log("current tak is: ",task);
+  const task = tasks.find((t) => t.id === taskId);
+
   if (!task) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -18,45 +18,59 @@ console.log("current tak is: ",task);
     );
   }
 
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900 p-6">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="relative max-w-4xl w-full bg-white/10 backdrop-blur-xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/20 p-10 transform hover:scale-[1.015] hover:shadow-[0_25px_70px_rgba(0,0,0,0.6)] transition duration-300"
-      >
-        <div className="absolute -top-5 -left-5">
-          <Sparkles size={36} className="text-indigo-300 animate-pulse" />
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
+    <button
+      onClick={() => navigate("/dashboardLayout/browse-tasks")}
+      className="mb-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+    >
+      ← Back to Browse Tasks
+    </button>
+
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="w-full max-w-3xl bg-white rounded-lg shadow-md p-8"
+    >
+      <div className="flex items-center gap-2 mb-6">
+        <Sparkles size={24} className="text-indigo-600" />
+        <h2 className="text-2xl font-bold text-gray-800">Task Overview</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
+        <div>
+          <p className="font-semibold">Description:</p>
+          <p className="mt-1">{task.description}</p>
         </div>
-        <h2 className="text-4xl font-extrabold text-center text-white mb-10 tracking-wider drop-shadow-md">🚀 Task Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-white text-base">
-          <div>
-            <p className="font-medium text-pink-300">Description:</p>
-            <p className="mt-1 text-white/90">{task.description}</p>
-          </div>
-          <div>
-            <p className="font-medium text-pink-300">Amount:</p>
-            <p className="mt-1">${task.budget}</p>
-          </div>
-          <div>
-            <p className="font-medium text-pink-300">State:</p>
-            <p className="mt-1">{task.status}</p>
-          </div>
-          <div>
-            <p className="font-medium text-pink-300">Deadline:</p>
-            <p className="mt-1">{task.deadline}</p>
-          </div>
-          <div>
-            <p className="font-medium text-pink-300">Category:</p>
-            <p className="mt-1">{task.category}</p>
-          </div>
-          <div>
-            <p className="font-medium text-pink-300">Tags:</p>
-            <p className="mt-1">{task.tags.join(', ')}</p>
-          </div>
+
+        <div>
+          <p className="font-semibold">Amount:</p>
+          <p className="mt-1">${task.budget}</p>
         </div>
-      </motion.div>
-    </div>
+
+        <div>
+          <p className="font-semibold">State:</p>
+          <p className="mt-1 capitalize">{task.status}</p>
+        </div>
+
+        <div>
+          <p className="font-semibold">Deadline:</p>
+          <p className="mt-1">{task.deadline}</p>
+        </div>
+
+        <div>
+          <p className="font-semibold">Category:</p>
+          <p className="mt-1">{task.category}</p>
+        </div>
+
+        <div>
+          <p className="font-semibold">Tags:</p>
+          <p className="mt-1">{task.tags.join(",")}</p>
+        </div>
+      </div>
+    </motion.div>
+  </div>
   );
 }

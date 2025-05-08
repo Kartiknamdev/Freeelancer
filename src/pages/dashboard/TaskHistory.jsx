@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { HiFilter, HiX } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTasks } from '../../contextStore/task.context';
 
 const TaskHistory = () => {
   // Mock user data
@@ -12,41 +13,7 @@ const TaskHistory = () => {
   };
 
   // Mock tasks data
-  const tasks = [
-    {
-      id: 'task1',
-      title: 'Proofread a 10-page document',
-      category: 'Proofreading',
-      status: 'completed',
-      budget: 100,
-      createdAt: '2025-05-01',
-      deadline: '2025-05-10',
-      createdBy: 'user123',
-      assignedTo: 'user456',
-    },
-    {
-      id: 'task2',
-      title: 'Research on climate change',
-      category: 'Research',
-      status: 'assigned',
-      budget: 200,
-      createdAt: '2025-05-02',
-      deadline: '2025-05-15',
-      createdBy: 'user789',
-      assignedTo: 'user123',
-    },
-    {
-      id: 'task3',
-      title: 'Edit a blog post',
-      category: 'Editing',
-      status: 'open',
-      budget: 50,
-      createdAt: '2025-04-30',
-      deadline: '2025-05-05',
-      createdBy: 'user123',
-      assignedTo: null,
-    },
-  ];
+  const {tasks} = useTasks()
 
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -80,7 +47,7 @@ const TaskHistory = () => {
   // Reset filters
   const resetFilters = () => {
     setStatusFilter('all');
-    setTypeFilter(user.userType === 'client' ? 'created' : 'assigned');
+    // setTypeFilter(user.userType === 'client' ? 'created' : 'assigned');
   };
 
   // Get status badge styling

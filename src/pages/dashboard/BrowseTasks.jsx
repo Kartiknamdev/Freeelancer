@@ -1,28 +1,21 @@
-import { useState, useEffect, useMemo, useContext } from "react";
-import { Link } from "react-router-dom";
-import {
-  HiSearch,
-  HiFilter,
-  HiX,
-  HiCurrencyDollar,
-  HiCalendar,
-  HiTag,
-} from "react-icons/hi";
+import { useState, useEffect } from "react";
 import { format, isPast } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import TaskInfo from "./TaskInfo";
 import { useTasks } from "../../contextStore/task.context";
 
-const BrowseTasks = () => {
-  const tasks = useTasks();
-// Mock user data
+import { Link } from "react-router-dom";
+import { HiSearch, HiFilter, HiX, HiCurrencyDollar, HiTag, HiCalendar } from "react-icons/hi";
+
+export default function BrowseTasks() {
+  const { tasks } = useTasks();
+
   const user = {
-    id: "user123",
+    id: "user123", // mock user ID
     name: "John Doe",
     userType: "worker",
   };
 
-  // State for filters
+  // Filters state
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("");
   const [minBudget, setMinBudget] = useState("");
@@ -30,55 +23,39 @@ const BrowseTasks = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filteredTasks, setFilteredTasks] = useState([]);
 
-  // Categories extracted from tasks
   const categories = [...new Set(tasks.map((task) => task.category))]
     .filter(Boolean)
     .sort();
 
-  // Filter tasks
   useEffect(() => {
     let filtered = tasks.filter((task) => {
-      // Only show open tasks
       if (task.status !== "open") return false;
-
-      // Don't show own tasks
       if (task.createdBy === user.id) return false;
-
-      // Don't show tasks where deadline has passed
       if (isPast(new Date(task.deadline))) return false;
 
-      // Search term filter
+      const search = searchTerm.toLowerCase();
       if (
-        searchTerm &&
-        !task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !task.description.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !task.tags.some((tag) =>
-          tag.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        search &&
+        !task.title.toLowerCase().includes(search) &&
+        !task.description.toLowerCase().includes(search) &&
+        !task.tags.some((tag) => tag.toLowerCase().includes(search))
       ) {
         return false;
       }
 
-      // Category filter
       if (category && task.category !== category) return false;
-
-      // Budget filters
       if (minBudget && task.budget < parseFloat(minBudget)) return false;
       if (maxBudget && task.budget > parseFloat(maxBudget)) return false;
 
       return true;
     });
 
-    // Sort by newest first
     filtered = filtered.sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
-
     setFilteredTasks(filtered);
- // Debug statement for filtered tasks
   }, [tasks, searchTerm, category, minBudget, maxBudget]);
 
-  // Reset filters
   const resetFilters = () => {
     setSearchTerm("");
     setCategory("");
@@ -238,8 +215,6 @@ const BrowseTasks = () => {
         ) : (
           <ul className="divide-y divide-gray-200">
             {filteredTasks.map((task) => {
-              // console.log("Rendering task:", task); // Debug statement for each task
-              // console.log("Task ID:", task.id); // Debug statement for task ID
               return (
                 <motion.li
                   key={task.id}
@@ -248,8 +223,8 @@ const BrowseTasks = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <Link
-                    to={`/dashboardLayout/browse-tasks/task-info`}
-                    state={{ task }}
+                    key={task.id}
+                    to={`/dashboardLayout/browse-tasks/${task.id}`}
                     className="block hover:bg-gray-50 transition-colors"
                   >
                     <div className="px-6 py-4">
@@ -291,6 +266,4 @@ const BrowseTasks = () => {
       </div>
     </div>
   );
-};
-
-export default BrowseTasks;
+}

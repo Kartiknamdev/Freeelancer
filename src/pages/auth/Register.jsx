@@ -1,21 +1,38 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import axios from 'axios'; // For API calls
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useAuth } from "../../contextStore/auth.context";
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [userType, setUserType] = useState('client');
-  const [error, setError] = useState('');
+  const { registerUser } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/login')
+    // validate password
+    if (password !== confirmPassword) {
+      setError("password does not match");
+      return;
+    }
+    setLoading(true);
+    setError("");
+
+    // call register function
+    try {
+      await registerUser(name, email, password);
+      alert("registered successfully")
+      navigate("/login");
+    } catch (error) {
+      setError(error.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,7 +43,9 @@ const Register = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-center text-2xl font-bold mb-6">Create your account</h2>
+        <h2 className="text-center text-2xl font-bold mb-6">
+          Create your account
+        </h2>
 
         {error && (
           <motion.div
@@ -103,7 +122,7 @@ const Register = () => {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="form-label">Account type</label>
             <div className="mt-1 grid grid-cols-2 gap-3">
               <div
@@ -135,7 +154,7 @@ const Register = () => {
                 I want to work
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex items-center">
             <input
@@ -146,11 +165,11 @@ const Register = () => {
               className="form-checkbox"
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-              I agree to the{' '}
+              I agree to the{" "}
               <Link to="#" className="text-blue-600 hover:text-blue-800">
                 Terms of Service
-              </Link>{' '}
-              and{' '}
+              </Link>{" "}
+              and{" "}
               <Link to="#" className="text-blue-600 hover:text-blue-800">
                 Privacy Policy
               </Link>
@@ -165,15 +184,18 @@ const Register = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? "Creating account..." : "Create account"}
             </motion.button>
           </div>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
               Sign in
             </Link>
           </p>

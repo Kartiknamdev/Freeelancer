@@ -1,36 +1,48 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebookF, FaGithub } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+import { useAuth } from "../../contextStore/auth.context";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const {loginUser} = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your login logic here
-    navigate('/dashboardLayout/dashboard')
-    console.log('Form submitted:', { email, password });
+    setLoading(true);
+
+    try {
+      await loginUser(email, password);
+      navigate("/dashboardLayout/dashboard"); // Redirect to dashboard on success
+    } catch (err) {
+      setLoginError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDemoLogin = async (type) => {
     setLoading(true);
-  
+
     try {
       const demoCredentials =
-        type === 'client'
-          ? { email: 'alex@example.com', password: 'password123' }
-          : { email: 'sarah@example.com', password: 'password123' };
-  
+        type === "client"
+          ? { email: "alex@example.com", password: "password123" }
+          : { email: "sarah@example.com", password: "password123" };
+
       // Simulate saving a token for demo purposes
-      localStorage.setItem('token', 'demo-token');
-      localStorage.setItem('user', JSON.stringify(demoCredentials));
-      navigate('/dashboardLayout/dashboard');
+      localStorage.setItem("token", "demo-token");
+      localStorage.setItem("user", JSON.stringify(demoCredentials));
+      navigate("/dashboardLayout/dashboard");
     } catch (err) {
-      setError('Demo login failed');
+      setError("Demo login failed");
       setLoading(false);
     }
   };
@@ -43,7 +55,9 @@ const Login = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-center text-2xl font-bold mb-6">Sign in to your account</h2>
+        <h2 className="text-center text-2xl font-bold mb-6">
+          Sign in to your account
+        </h2>
 
         {error && (
           <motion.div
@@ -96,13 +110,19 @@ const Login = () => {
                 type="checkbox"
                 className="form-checkbox"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-gray-700"
+              >
                 Remember me
               </label>
             </div>
 
             <div className="text-sm">
-              <Link to="/forgot-password" className="text-blue-600 hover:text-blue-800">
+              <Link
+                to="/forgot-password"
+                className="text-blue-600 hover:text-blue-800"
+              >
                 Forgot your password?
               </Link>
             </div>
@@ -116,7 +136,7 @@ const Login = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </motion.button>
           </div>
         </form>
@@ -127,36 +147,61 @@ const Login = () => {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or use demo account</span>
+              <span className="px-2 bg-white text-gray-500">
+                or Sign in with
+              </span>
             </div>
           </div>
 
+          {/* <FaGithub /> */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <motion.button
               type="button"
-              className="btn-outline text-xs"
-              onClick={() => handleDemoLogin('client')}
+              className="btn-outline text-xs flex items-center justify-around"
+              onClick={() => alert("want to login with Google")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Sign in as Client
+              <FcGoogle />
+              continue with google
             </motion.button>
             <motion.button
               type="button"
-              className="btn-outline text-xs"
-              onClick={() => handleDemoLogin('worker')}
+              className="btn-outline text-xs flex items-center justify-around"
+              onClick={() => alert("want to login with github")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Sign in as Worker
+              <FaGithub /> continue with github
+            </motion.button>
+            <motion.button
+              type="button"
+              className="btn-outline text-xs flex items-center justify-around"
+              onClick={() => alert("want to login with twitter")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FaXTwitter /> continue with twitter
+            </motion.button>
+            <motion.button
+              type="button"
+              className="btn-outline text-xs flex items-center justify-around"
+              onClick={() => alert("want to login with facebook")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <FaFacebookF /> continue with facebook
             </motion.button>
           </div>
         </div>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-blue-600 hover:text-blue-800 font-medium">
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
               Sign up
             </Link>
           </p>

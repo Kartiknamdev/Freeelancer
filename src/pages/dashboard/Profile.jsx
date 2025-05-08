@@ -1,49 +1,54 @@
-import { useState } from 'react';
-import { HiPencil, HiOutlineDocumentAdd } from 'react-icons/hi';
-import { motion } from 'framer-motion';
-
+import { useState } from "react";
+import { HiPencil, HiOutlineDocumentAdd } from "react-icons/hi";
+ 
+import { useAuth } from "../../contextStore/auth.context";
+ 
 const Profile = () => {
-  const [editing, setEditing] = useState(false); // Placeholder for editing state
-  const avatarPreview =
-    'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'; // Placeholder avatar
-  const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    bio: 'This is a placeholder bio.',
-    userType: 'worker', // 'client' or 'worker'
-    skills: ['Proofreading', 'Editing', 'Research'],
-    rating: 4.5,
-    completedTasks: 12,
+  const { user, updateDetails } = useAuth(); // Access user and updateDetails from context
+  const loggedUser = user.data.user;
+  const [editing, setEditing] = useState(false); // State for editing mode
+  const [formData, setFormData] = useState({
+    fullName: loggedUser.fullName || "",
+    email: loggedUser.email || "",
+    phone: loggedUser.phone || "",
+    age: loggedUser.age || "",
+    gender: loggedUser.gender || "",
+    bio: loggedUser.Bio || "",
+    organization: loggedUser.organization || "",
+    skills: loggedUser.skills || "", // Skills as a space-separated string
+  });
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleImageChange = (e) => {
-    // Placeholder for image change handler
-    console.log('Image changed:', e.target.files[0]);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder for form submission
-    console.log('Form submitted');
+    try {
+      const updatedData = {
+        ...formData,
+        skills: formData.skills.split(" ").map((skill) => skill.trim()), // Convert skills to an array
+      };
+      console.log("Updated Data:", updatedData);
+      await updateDetails(updatedData); // Call updateDetails with the updated data
+      alert("Profile updated successfully!");
+      setEditing(false); // Exit editing mode after saving
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile.");
+    }
   };
-
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Manage your personal information and preferences
-        </p>
-      </div>
-
       <div className="bg-white rounded-xl shadow-card overflow-hidden">
         {/* Banner and avatar */}
         <div className="relative h-32 bg-gradient-to-r from-primary-600 to-accent-600">
           <div className="absolute -bottom-12 left-6 sm:left-8">
             <div className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full border-4 border-white overflow-hidden bg-white">
               <img
-                src={avatarPreview}
-                alt={user.name}
+                src={loggedUser.photo || "https://via.placeholder.com/150"}
+                alt={""}
                 className="h-full w-full object-cover"
               />
               {editing && (
@@ -54,7 +59,10 @@ const Profile = () => {
                       type="file"
                       className="sr-only"
                       accept="image/*"
-                      onChange={handleImageChange}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        setFormData((prev) => ({ ...prev, photo: file }));
+                      }}
                     />
                   </label>
                 </div>
@@ -78,14 +86,15 @@ const Profile = () => {
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="form-label">
+                  <label htmlFor="fullName" className="form-label">
                     Full Name
                   </label>
                   <input
                     type="text"
-                    id="name"
+                    id="fullName"
                     className="form-input"
-                    defaultValue={user.name}
+                    value={formData.fullName}
+                    onChange={handleInputChange}
                     required
                   />
                 </div>
@@ -98,12 +107,54 @@ const Profile = () => {
                     type="email"
                     id="email"
                     className="form-input bg-gray-50"
-                    defaultValue={user.email}
+                    value={formData.email}
                     disabled
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Email address cannot be changed
                   </p>
+                </div>
+
+                <div>
+                  <label htmlFor="phone" className="form-label">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    id="phone"
+                    className="form-input"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="age" className="form-label">
+                    Age
+                  </label>
+                  <input
+                    type="number"
+                    id="age"
+                    className="form-input"
+                    value={formData.age}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="gender" className="form-label">
+                    Gender
+                  </label>
+                  <select
+                    id="gender"
+                    className="form-select"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
 
                 <div>
@@ -114,25 +165,36 @@ const Profile = () => {
                     id="bio"
                     rows={4}
                     className="form-input"
-                    placeholder="Tell clients/workers about yourself..."
-                    defaultValue={user.bio}
+                    value={formData.bio}
+                    onChange={handleInputChange}
                   />
                 </div>
 
-                {user.userType === 'worker' && (
-                  <div>
-                    <label htmlFor="skills" className="form-label">
-                      Skills (comma separated)
-                    </label>
-                    <input
-                      type="text"
-                      id="skills"
-                      className="form-input"
-                      placeholder="e.g., Proofreading, Editing, Research"
-                      defaultValue={user.skills.join(', ')}
-                    />
-                  </div>
-                )}
+                <div>
+                  <label htmlFor="organization" className="form-label">
+                    Organization
+                  </label>
+                  <input
+                    type="text"
+                    id="organization"
+                    className="form-input"
+                    value={formData.organization}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="skills" className="form-label">
+                    Skills (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    id="skills"
+                    className="form-input"
+                    value={formData.skills}
+                    onChange={handleInputChange}
+                  />
+                </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
@@ -150,12 +212,13 @@ const Profile = () => {
             </form>
           ) : (
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-              <p className="text-sm text-gray-500">{user.email}</p>
-
+              <h2 className="text-xl font-bold text-gray-900">
+                {loggedUser.fullName}
+              </h2>
+              <p className="text-sm text-gray-500">{loggedUser.email}</p>
               <div className="mt-1 flex items-center">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                  {user.userType === 'client' ? 'Client' : 'Worker'}
+                  {user.userType === "client" ? "Client" : "Worker"}
                 </span>
 
                 <div className="ml-3 flex items-center text-yellow-400">
@@ -163,33 +226,30 @@ const Profile = () => {
                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                   </svg>
                   <span className="ml-1 text-xs text-gray-700">
-                    {user.rating} ({user.completedTasks} tasks)
+                    {loggedUser.rating}
                   </span>
                 </div>
               </div>
-
               <div className="mt-6">
                 <h3 className="text-base font-medium text-gray-900">Bio</h3>
                 <p className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">
-                  {user.bio || 'No bio provided yet.'}
+                  {loggedUser.Bio || "No bio provided yet."}
                 </p>
               </div>
 
-              {user.userType === 'worker' && (
-                <div className="mt-6">
-                  <h3 className="text-base font-medium text-gray-900">Skills</h3>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {user.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
+              <div className="mt-6">
+                <h3 className="text-base font-medium text-gray-900">Skills</h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(loggedUser.skills || "").split(" ").map((skill, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800"
+                    >
+                      {skill}
+                    </span>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
