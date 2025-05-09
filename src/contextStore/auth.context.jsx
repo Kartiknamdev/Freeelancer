@@ -5,7 +5,7 @@ import axios from "axios";
 const AuthContext = createContext();
 
 // Initial state
-const initialState = { authUser: null, authError: null };
+const initialState = { authUser: null,token:null, authError: null };
 
 // Reducer function
 const reducerFun = (state, action) => {
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         { fullName, email, password }
       );
       if (response) {
-        dispatch({ type: "REGISTER_SUCCESS", payload: response.data });
+        dispatch({ type: "REGISTER_SUCCESS", payload: response.data.data });
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -57,8 +57,9 @@ export const AuthProvider = ({ children }) => {
         "http://localhost:3000/api/v1/users/login",
         { email, password }
       );
+      console.log("response: ", response);
       if (response) {
-        dispatch({ type: "LOGIN_SUCCESS", payload: response.data });
+        dispatch({ type: "LOGIN_SUCCESS", payload: response.data.data });
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -68,28 +69,37 @@ export const AuthProvider = ({ children }) => {
       });
     }
   };
-  const updateDetails = async (updatedData) => {
+  // Update user details
+  const updateDetails = async (formData) => {
     try {
-      const response = await axios.put(
-        "http://localhost:3000/api/v1/users/update-details",
-        updatedData,
+      console.log("accesstoken:  ",state.authUser.accessToken ); // ✅ Log the FormData object
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/users/update_details",
+        formData, // ✅ Wrap in `formData` to match backend
         {
           headers: {
-            Authorization: `Bearer ${state.authUser?.token}`, // Include token for authentication
+            Authorization: `Bearer ${state.authUser?.accessToken}`, // ✅ Ensure token is present
+            "Content-Type": "multipart/form-data", // ✅ Required for JSON data
           },
         }
       );
-      if (response) {
-        dispatch({ type: "UPDATE_SUCCESS", payload: response.data });
+      console.log("response: ", response);
+      if (response.status === 200) {
+        dispatch({ type: "UPDATE_SUCCESS", payload: response.data.data });
       }
     } catch (error) {
-      console.error("Update details error:", error);
+      console.error(
+        "Update details error:",
+        error.response?.data || error.message
+      );
+
       dispatch({
         type: "UPDATE_FAILURE",
         payload: error.response?.data || error.message,
       });
     }
   };
+
   const contextItems = useMemo(
     () => ({
       user: state.authUser,

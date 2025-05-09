@@ -1,38 +1,40 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { HiPencil, HiOutlineDocumentAdd } from "react-icons/hi";
- 
-import { useAuth } from "../../contextStore/auth.context";
- 
-const Profile = () => {
-  const { user, updateDetails } = useAuth(); // Access user and updateDetails from context
-  const loggedUser = user.data.user;
-  const [editing, setEditing] = useState(false); // State for editing mode
-  const [formData, setFormData] = useState({
-    fullName: loggedUser.fullName || "",
-    email: loggedUser.email || "",
-    phone: loggedUser.phone || "",
-    age: loggedUser.age || "",
-    gender: loggedUser.gender || "",
-    bio: loggedUser.Bio || "",
-    organization: loggedUser.organization || "",
-    skills: loggedUser.skills || "", // Skills as a space-separated string
-  });
 
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  };
+import { useAuth } from "../../contextStore/auth.context";
+
+const Profile = () => {
+  const { user, updateDetails } = useAuth();  
+   const loggedUser = user.user;
+  const [editing, setEditing] = useState(false);  
+ 
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const ageRef = useRef(null);
+  const photoRef = useRef(null);
+  const genderRef = useRef(null);
+  const bioRef = useRef(null);
+  const organnizationRef = useRef(null);
+  const skillsRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+  formData.append("fullName", nameRef.current.value || "");
+  formData.append("email", emailRef.current.value || "");
+  formData.append("phone", phoneRef.current.value || "");
+  formData.append("age", ageRef.current.value || "");
+  formData.append("photo", photoRef.current.files[0] || ""); // Append the file
+  formData.append("gender", genderRef.current.value || "");
+  formData.append("Bio", bioRef.current.value || "");
+  formData.append("organization", organnizationRef.current.value || "");
+  formData.append("skills", skillsRef.current.value || "");
+  formData.append("rating", loggedUser.rating || "");
     try {
-      const updatedData = {
-        ...formData,
-        skills: formData.skills.split(" ").map((skill) => skill.trim()), // Convert skills to an array
-      };
-      console.log("Updated Data:", updatedData);
-      await updateDetails(updatedData); // Call updateDetails with the updated data
-      alert("Profile updated successfully!");
+      console.log("Updated Data on profile.jsx :", formData);
+     const response= await updateDetails(formData); // Call updateDetails with the updated data
+     if(response) alert("Profile updated successfully!");
       setEditing(false); // Exit editing mode after saving
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -47,7 +49,7 @@ const Profile = () => {
           <div className="absolute -bottom-12 left-6 sm:left-8">
             <div className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full border-4 border-white overflow-hidden bg-white">
               <img
-                src={loggedUser.photo || "https://via.placeholder.com/150"}
+                src={ loggedUser.photo||"https://via.placeholder.com/150"}
                 alt={""}
                 className="h-full w-full object-cover"
               />
@@ -59,10 +61,7 @@ const Profile = () => {
                       type="file"
                       className="sr-only"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        setFormData((prev) => ({ ...prev, photo: file }));
-                      }}
+                      ref={photoRef}
                     />
                   </label>
                 </div>
@@ -93,8 +92,8 @@ const Profile = () => {
                     type="text"
                     id="fullName"
                     className="form-input"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
+                    ref={nameRef}
+                    defaultValue={loggedUser.fullName}
                     required
                   />
                 </div>
@@ -107,7 +106,8 @@ const Profile = () => {
                     type="email"
                     id="email"
                     className="form-input bg-gray-50"
-                    value={formData.email}
+                    ref={emailRef}
+                    defaultValue={loggedUser.email}
                     disabled
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -123,8 +123,8 @@ const Profile = () => {
                     type="text"
                     id="phone"
                     className="form-input"
-                    value={formData.phone}
-                    onChange={handleInputChange}
+                    ref={phoneRef}
+                    defaultValue={loggedUser.phone}
                   />
                 </div>
 
@@ -136,8 +136,8 @@ const Profile = () => {
                     type="number"
                     id="age"
                     className="form-input"
-                    value={formData.age}
-                    onChange={handleInputChange}
+                    ref={ageRef}
+                    defaultValue={loggedUser.age}
                   />
                 </div>
 
@@ -148,8 +148,8 @@ const Profile = () => {
                   <select
                     id="gender"
                     className="form-select"
-                    value={formData.gender}
-                    onChange={handleInputChange}
+                    ref={genderRef}
+                    defaultValue={loggedUser.gender}
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -165,8 +165,8 @@ const Profile = () => {
                     id="bio"
                     rows={4}
                     className="form-input"
-                    value={formData.bio}
-                    onChange={handleInputChange}
+                    ref={bioRef}
+                    defaultValue={loggedUser.Bio}
                   />
                 </div>
 
@@ -178,8 +178,8 @@ const Profile = () => {
                     type="text"
                     id="organization"
                     className="form-input"
-                    value={formData.organization}
-                    onChange={handleInputChange}
+                    ref={organnizationRef}
+                    defaultValue={loggedUser.organization}
                   />
                 </div>
 
@@ -191,8 +191,8 @@ const Profile = () => {
                     type="text"
                     id="skills"
                     className="form-input"
-                    value={formData.skills}
-                    onChange={handleInputChange}
+                    ref={skillsRef}
+                    defaultValue={loggedUser.skills}
                   />
                 </div>
 
@@ -218,7 +218,7 @@ const Profile = () => {
               <p className="text-sm text-gray-500">{loggedUser.email}</p>
               <div className="mt-1 flex items-center">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                  {user.userType === "client" ? "Client" : "Worker"}
+                  worker
                 </span>
 
                 <div className="ml-3 flex items-center text-yellow-400">
