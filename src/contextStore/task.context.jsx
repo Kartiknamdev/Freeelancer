@@ -1,93 +1,82 @@
 import { createContext, useContext, useState } from "react";
+import { useAuth } from "./auth.context";
+import axios from "axios";
 
-const taskContext = createContext();
-
-const tasks = [
+const TaskContext = createContext();
+const demoTasks = [
   {
-    id: "task1",
-    title: "Proofread a 10-page document",
-    description: "Need someone to proofread and edit a 10-page document.",
-    category: "Proofreading",
+    id: 1,
+    title: "Task 1",
+    description: "Description for Task 1",
     budget: 100,
-    deadline: "2025-05-10",
-    createdAt: "2025-05-01",
-    status: "open",
+    createdAt: "2023-10-01T12:00:00Z",
+    deadline: "2023-10-15T12:00:00Z",
+    status: "completed",
+    createdBy: "user123",
+    category: "Web Development",
+    tags: ["HTML", "CSS"],
+  },
+  {
+    id: 2,
+    title: "Task 2",
+    description: "Description for Task 2",
+    budget: 200,
+    createdAt: "2023-10-02T12:00:00Z",
+    deadline: "2023-10-20T12:00:00Z",
+    status: "completed",
     createdBy: "user456",
-    tags: ["proofreading", "editing", "grammar"],
-  },
-  {
-    id: "task2",
-    title: "Research on climate change",
-    description: "Looking for a detailed research report on climate change.",
-    category: "Research",
-    budget: 200,
-    deadline: "2025-05-15",
-    createdAt: "2025-05-02",
-    status: "open",
-    createdBy: "user789",
-    tags: ["research", "climate", "environment"],
-  },
-  {
-    id: "task3",
-    title: "Edit a blog post",
-    description: "Need help editing a blog post for clarity and grammar.",
-    category: "assigned",
-    budget: 50,
-    deadline: "2025-05-20",
-    createdAt: "2025-04-30",
-    status: "open",
-    createdBy: "user122", // Created by the current user
-    tags: ["editing", "blog", "content"],
-  },
-  {
-    id: 'task4',
-    title: 'Proofread a 10-page document',
-    category: 'Proofreading',
-    status: 'open',
-    budget: 100,
-    createdAt: '2025-05-01',
-    deadline: '2025-05-10',
-    createdBy: 'user123',
-    assignedTo: 'user456',
-    tags: ["editing", "blog", "content"],
-  },
-  {
-    id: 'task5',
-    title: 'Research on climate change',
-    category: 'Research',
-    status: 'open',
-    budget: 200,
-    createdAt: '2025-05-02',
-    deadline: '2025-05-15',
-    createdBy: 'user789',
-    assignedTo: 'user124',
-    tags: ["editing", "blog", "content"],
-  },
-  {
-    id: 'task6',
-    title: 'Edit a blog post',
-    category: 'Editing',
-    status: 'open',
-    budget: 50,
-    createdAt: '2025-04-30',
-    deadline: '2025-05-15',
-    createdBy: 'user233',
-    assignedTo: null,
-    tags: ["editing", "blog", "content"],
+    category: "Mobile Development",
+    tags: ["React Native", "JavaScript"],
   },
 ];
-// TaskProvider component to provide tasks to the app
 export const TaskProvider = ({ children }) => {
-  const [renderTask, setRenderTask] = useState({}); // Move useState inside TaskProvider
-// alert(renderTask.id)
+  const { user } = useAuth();
+  const [done, setDone] = useState(false);
+
+  const SubmitTask = async (taskDetails) => {
+     try {
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/users/create-task",
+        taskDetails,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        }
+      );
+      if (response.status === 201) {
+        console.log("Task created successfully:", response.data);
+        setDone(true);
+      }
+      return response;
+    } catch (error) {
+      console.error("Error creating task:", error);
+      throw error;
+    }
+  };
+  const fetchBrowseTasks = async (userId) => {
+  try {
+    const res = await axios.get(`http://localhost:3000/api/v1/users/browse-task?userId=${userId}`);
+    return res.data; // array of tasks
+  } catch (err) {
+    console.error("Browse tasks error:", err);
+    return [];
+  }
+};
+  
   return (
-    <taskContext.Provider value={{ tasks, renderTask, setRenderTask }}>
+    <TaskContext.Provider value={{ SubmitTask, done, setDone , demoTasks,fetchBrowseTasks }}>
       {children}
-    </taskContext.Provider>
+    </TaskContext.Provider>
   );
 };
 
 // Custom hook to use the task context
 export const useTasks = () => {
-  return useContext(taskContext);
+  const context = useContext(TaskContext);
+  if (!context) {
+    throw new Error("useTasks must be used within a TaskProvider");
+  }
+  return context;
 };

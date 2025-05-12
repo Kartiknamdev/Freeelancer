@@ -20,7 +20,7 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
+  const formData = new FormData();
   formData.append("fullName", nameRef.current.value || "");
   formData.append("email", emailRef.current.value || "");
   formData.append("phone", phoneRef.current.value || "");

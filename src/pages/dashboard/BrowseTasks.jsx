@@ -4,15 +4,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTasks } from "../../contextStore/task.context";
 
 import { Link } from "react-router-dom";
-import { HiSearch, HiFilter, HiX, HiCurrencyDollar, HiTag, HiCalendar } from "react-icons/hi";
+import {
+  HiSearch,
+  HiFilter,
+  HiX,
+  HiCurrencyDollar,
+  HiTag,
+  HiCalendar,
+} from "react-icons/hi";
+import { useAuth } from "../../contextStore/auth.context";
 
 export default function BrowseTasks() {
-  const { tasks } = useTasks();
-
-  const user = {
-    id: "user123", // mock user ID
-    name: "John Doe",
-    userType: "worker",
+  const { demoTasks, fetchBrowseTasks } = useTasks();
+  const { user } = useAuth();
+  console.log("user in browse task: ", user);
+  const filtersVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: { opacity: 1, height: "auto" },
+    exit: { opacity: 0, height: 0 },
   };
 
   // Filters state
@@ -23,12 +32,17 @@ export default function BrowseTasks() {
   const [showFilters, setShowFilters] = useState(false);
   const [filteredTasks, setFilteredTasks] = useState([]);
 
-  const categories = [...new Set(tasks.map((task) => task.category))]
+  const categories = [...new Set(demoTasks.map((task) => task.category))]
     .filter(Boolean)
     .sort();
 
-  useEffect(() => {
-    let filtered = tasks.filter((task) => {
+  useEffect(async () => {
+    // Fetch tasks from the server
+    let tasks = async () => {
+     const allTask =  await fetchBrowseTasks(user.user._id);
+      console.log("fetched task: ", allTask);
+    };
+    let filtered = demoTasks.filter((task) => {
       if (task.status !== "open") return false;
       if (task.createdBy === user.id) return false;
       if (isPast(new Date(task.deadline))) return false;
@@ -54,7 +68,7 @@ export default function BrowseTasks() {
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
     setFilteredTasks(filtered);
-  }, [tasks, searchTerm, category, minBudget, maxBudget]);
+  }, [demoTasks, searchTerm, category, minBudget, maxBudget]);
 
   const resetFilters = () => {
     setSearchTerm("");
