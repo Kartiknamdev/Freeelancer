@@ -3,9 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HiMenuAlt1, HiBell, HiLogout } from 'react-icons/hi';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { use } from 'react';
+import { useAuth } from '../../contextStore/auth.context';
 
 const TopNav = ({ openSidebar }) => {
-  const [user, setUser] = useState(null);
+ const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -14,121 +16,11 @@ const TopNav = ({ openSidebar }) => {
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
 
-  // // Fetch user data from the backend
-  // useEffect(() => {
-  //   const fetchUser = async () => {
-  //     try {
-  //       const token = localStorage.getItem('token');
-  //       if (!token) {
-  //         navigate('/login');
-  //         return;
-  //       }
-
-  //       const response = await axios.get('https://api.example.com/auth/me', {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setUser(response.data);
-  //     } catch (error) {
-  //       console.error('Error fetching user:', error);
-  //       navigate('/login');
-  //     }
-  //   };
-
-  //   fetchUser();
-  // }, [navigate]);
-
-  // // Fetch notifications from the backend
-  // useEffect(() => {
-  //   const fetchNotifications = async () => {
-  //     try {
-  //       const token = localStorage.getItem('token');
-  //       if (!token) return;
-
-  //       const response = await axios.get('https://api.example.com/notifications', {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       setNotifications(response.data);
-  //       setUnreadCount(response.data.filter((n) => !n.read).length);
-  //     } catch (error) {
-  //       console.error('Error fetching notifications:', error);
-  //     }
-  //   };
-
-  //   fetchNotifications();
-  // }, []);
-
-  // // Mark a notification as read
-  // const markAsRead = async (notificationId) => {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) return;
-
-  //     await axios.post(
-  //       `https://api.example.com/notifications/${notificationId}/read`,
-  //       {},
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     setNotifications((prev) =>
-  //       prev.map((n) =>
-  //         n.id === notificationId ? { ...n, read: true } : n
-  //       )
-  //     );
-  //     setUnreadCount((prev) => prev - 1);
-  //   } catch (error) {
-  //     console.error('Error marking notification as read:', error);
-  //   }
-  // };
-
-  // // Mark all notifications as read
-  // const markAllAsRead = async () => {
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     if (!token) return;
-
-  //     await axios.post(
-  //       'https://api.example.com/notifications/mark-all-read',
-  //       {},
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     setNotifications((prev) =>
-  //       prev.map((n) => ({ ...n, read: true }))
-  //     );
-  //     setUnreadCount(0);
-  //   } catch (error) {
-  //     console.error('Error marking all notifications as read:', error);
-  //   }
-  // };
-
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
-
-  // Close dropdowns when clicking outside
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (
-  //       notificationsRef.current &&
-  //       !notificationsRef.current.contains(event.target)
-  //     ) {
-  //       setNotificationsOpen(false);
-  //     }
-  //     if (
-  //       userMenuRef.current &&
-  //       !userMenuRef.current.contains(event.target)
-  //     ) {
-  //       setUserMenuOpen(false);
-  //     }
-  //   };
-
-  //   document.addEventListener('mousedown', handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener('mousedown', handleClickOutside);
-  //   };
-  // }, []);
 
   // Animation variants
   const dropdownVariants = {
@@ -260,7 +152,7 @@ const TopNav = ({ openSidebar }) => {
                 <img
                   className="h-8 w-8 rounded-full object-cover"
                   src={
-                    user?.avatar ||
+                    user?.user.photo ||
                     'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100'
                   }
                   alt="User avatar"

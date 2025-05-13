@@ -1,40 +1,19 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./auth.context";
 import axios from "axios";
 
 const TaskContext = createContext();
-const demoTasks = [
-  {
-    id: 1,
-    title: "Task 1",
-    description: "Description for Task 1",
-    budget: 100,
-    createdAt: "2023-10-01T12:00:00Z",
-    deadline: "2023-10-15T12:00:00Z",
-    status: "completed",
-    createdBy: "user123",
-    category: "Web Development",
-    tags: ["HTML", "CSS"],
-  },
-  {
-    id: 2,
-    title: "Task 2",
-    description: "Description for Task 2",
-    budget: 200,
-    createdAt: "2023-10-02T12:00:00Z",
-    deadline: "2023-10-20T12:00:00Z",
-    status: "completed",
-    createdBy: "user456",
-    category: "Mobile Development",
-    tags: ["React Native", "JavaScript"],
-  },
-];
+
 export const TaskProvider = ({ children }) => {
   const { user } = useAuth();
-  const [done, setDone] = useState(false);
 
-  const SubmitTask = async (taskDetails) => {
-     try {
+  const [tasks, setTasks] = useState([]);
+  const [done, setDone] = useState(false);
+  const [shouldFetchTasks, setShouldFetchTasks] = useState(true);
+
+  // Submit a new task
+  const submitTask = async (taskDetails) => {
+    try {
       const response = await axios.post(
         "http://localhost:3000/api/v1/users/create-task",
         taskDetails,
@@ -45,34 +24,72 @@ export const TaskProvider = ({ children }) => {
           },
         }
       );
+
       if (response.status === 201) {
         console.log("Task created successfully:", response.data);
         setDone(true);
+        setShouldFetchTasks(true); // trigger re-fetch if needed
       }
+
       return response;
     } catch (error) {
       console.error("Error creating task:", error);
       throw error;
     }
   };
+
+  // Fetch all tasks for the user
   const fetchBrowseTasks = async (userId) => {
-  try {
-    const res = await axios.get(`http://localhost:3000/api/v1/users/browse-task?userId=${userId}`);
-    return res.data; // array of tasks
-  } catch (err) {
-    console.error("Browse tasks error:", err);
-    return [];
-  }
-};
-  
+    if (!shouldFetchTasks || !userId || !user?.accessToken) return tasks;
+
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/v1/users/browse-task?userId=${userId}`
+      );
+
+      const fetchedTasks = response.data?.data;
+      console.log("Browse tasks response:", fetchedTasks);
+
+      if (Array.isArray(fetchedTasks)) {
+        setTasks(fetchedTasks);
+        if (fetchedTasks.length === 0) {
+          setShouldFetchTasks(false);
+        }
+        return fetchedTasks;
+      } else {
+        console.warn("Expected an array, got:", fetchedTasks);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      return [];
+    }
+  };
+
+  // Optional: Auto-fetch tasks when component mounts
+  useEffect(() => {
+    if (shouldFetchTasks && user?.id) {
+      fetchBrowseTasks(user.id);
+    }
+  }, [shouldFetchTasks, user]);
+
+  const value = {
+    submitTask,
+    fetchBrowseTasks,
+    tasks,
+    setTasks,
+    done,
+    setDone,
+  };
+
   return (
-    <TaskContext.Provider value={{ SubmitTask, done, setDone , demoTasks,fetchBrowseTasks }}>
+    <TaskContext.Provider value={value}>
       {children}
     </TaskContext.Provider>
   );
 };
 
-// Custom hook to use the task context
+// Custom hook for accessing task context
 export const useTasks = () => {
   const context = useContext(TaskContext);
   if (!context) {

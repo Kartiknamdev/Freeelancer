@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, isPast } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTasks } from "../../contextStore/task.context";
-
 import { Link } from "react-router-dom";
 import {
   HiSearch,
@@ -12,39 +10,49 @@ import {
   HiTag,
   HiCalendar,
 } from "react-icons/hi";
+import { useTasks } from "../../contextStore/task.context";
 import { useAuth } from "../../contextStore/auth.context";
 
 export default function BrowseTasks() {
-  const { demoTasks, fetchBrowseTasks } = useTasks();
+  const { fetchBrowseTasks } = useTasks();
   const { user } = useAuth();
-  console.log("user in browse task: ", user);
-  const filtersVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: { opacity: 1, height: "auto" },
-    exit: { opacity: 0, height: 0 },
-  };
-
-  // Filters state
+  const { tasks, setTasks } = useTasks(); // Use the context
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("");
   const [minBudget, setMinBudget] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filteredTasks, setFilteredTasks] = useState([]);
+  const [loading, setLoading] = useState(false); // Corrected initial value
 
-  const categories = [...new Set(demoTasks.map((task) => task.category))]
+  const categories = [...new Set(tasks.map((task) => task.category))] // Use tasks from context
     .filter(Boolean)
     .sort();
 
-  useEffect(async () => {
-    // Fetch tasks from the server
-    let tasks = async () => {
-     const allTask =  await fetchBrowseTasks(user.user._id);
-      console.log("fetched task: ", allTask);
+  useEffect(() => {
+    const fetchAndFilterTasks = async () => {
+      if (tasks.length === 0 && user?.user?._id) {
+        // Only fetch if tasks is empty
+        setLoading(true);
+        try {
+          const fetchedTasks = await fetchBrowseTasks(user.user._id);
+          setTasks(fetchedTasks); // Store fetched tasks in context
+        } catch (err) {
+          console.error("Error in fetchAndFilterTasks", err);
+        } finally {
+          setLoading(false);
+        }
+      }
     };
-    let filtered = demoTasks.filter((task) => {
+    fetchAndFilterTasks();
+  }, [fetchBrowseTasks, setTasks, user?.user?._id, tasks.length]); // tasks.length as dependency
+
+  useEffect(() => {
+    let filtered = tasks.filter((task) => {
+      // Use tasks from context
       if (task.status !== "open") return false;
-      if (task.createdBy === user.id) return false;
+      const isOwnTask = task.createdBy === user?.user?._id;
+      if (isOwnTask) return false; // Corrected: use !==
       if (isPast(new Date(task.deadline))) return false;
 
       const search = searchTerm.toLowerCase();
@@ -68,13 +76,18 @@ export default function BrowseTasks() {
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
     setFilteredTasks(filtered);
-  }, [demoTasks, searchTerm, category, minBudget, maxBudget]);
+  }, [tasks, searchTerm, category, minBudget, maxBudget, user?.user?._id]); // tasks instead of demoTasks
 
   const resetFilters = () => {
     setSearchTerm("");
     setCategory("");
     setMinBudget("");
     setMaxBudget("");
+  };
+  const filtersVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: { opacity: 1, height: "auto" },
+    exit: { opacity: 0, height: 0 },
   };
 
   return (
@@ -238,7 +251,7 @@ export default function BrowseTasks() {
                 >
                   <Link
                     key={task.id}
-                    to={`/dashboardLayout/browse-tasks/${task.id}`}
+                    to={`/dashboardLayout/browse-tasks/${task._id}`}
                     className="block hover:bg-gray-50 transition-colors"
                   >
                     <div className="px-6 py-4">
