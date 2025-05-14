@@ -31,8 +31,11 @@ const Profile = () => {
   formData.append("organization", organnizationRef.current.value || "");
   formData.append("skills", skillsRef.current.value || "");
   formData.append("rating", loggedUser.rating || "");
+  console.log("Form Data on profile.jsx : ");
+  formData.forEach((value, key) => {
+    console.log(key, value);
+  })
     try {
-      console.log("Updated Data on profile.jsx :", formData);
      const response= await updateDetails(formData); // Call updateDetails with the updated data
      if(response) alert("Profile updated successfully!");
       setEditing(false); // Exit editing mode after saving

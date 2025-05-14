@@ -5,7 +5,7 @@ import axios from "axios";
 const AuthContext = createContext();
 
 // Initial state
-const initialState = { authUser: null,token:null, authError: null };
+const initialState = { authUser: null, token: null, authError: null };
 
 // Reducer function
 const reducerFun = (state, action) => {
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
         "http://localhost:3000/api/v1/users/login",
         { email, password }
       );
-       if (response) {
+      if (response) {
         dispatch({ type: "LOGIN_SUCCESS", payload: response.data.data });
       }
     } catch (error) {
@@ -70,8 +70,12 @@ export const AuthProvider = ({ children }) => {
   };
   // Update user details
   const updateDetails = async (formData) => {
+    console.log("Form Data on taskContext.jsx : ");
+    formData.forEach((value, key) => {
+      console.log(key, value);
+    });
     try {
-      console.log("accesstoken:  ",state.authUser.accessToken ); // ✅ Log the FormData object
+      console.log("accesstoken:  ", state.authUser.accessToken); // ✅ Log the FormData object
       const response = await axios.post(
         "http://localhost:3000/api/v1/users/update_details",
         formData, // ✅ Wrap in `formData` to match backend
@@ -123,17 +127,6 @@ export const useAuth = () => {
   }
   return context;
 };
-
-
-
-
-
-
-
-
-
-
-
 
 // const tasks = [
 //   {
