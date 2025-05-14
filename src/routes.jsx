@@ -18,6 +18,8 @@ const Messages = lazy(() => import("./pages/dashboard/Messages"));
 const TaskHistory = lazy(() => import("./pages/dashboard/TaskHistory"));
 const Settings = lazy(() => import("./pages/dashboard/Settings"));
 const TaskInfo = lazy(() => import("./pages/dashboard/TaskInfo"));
+const Cookies = lazy(() => import("./pages/Cookies"));
+const APIDOCS = lazy(() => import("./pages/APIDOCS"));
 const withSuspense = (Component) => (
   <Suspense fallback={<LoadingScreen />}>
     <Component />
@@ -61,5 +63,7 @@ export const Router = createBrowserRouter([
   { path: "/login", element: withSuspense(Login) },
   { path: "/signup", element: withSuspense(Register) },
   { path: "/forgot-password", element: withSuspense(ForgotPassword) },
+  { path: "/cookies", element: withSuspense(Cookies) },
+  { path: "/api-docs", element: withSuspense(APIDOCS) },
   { path: "/", element: <App /> },
 ]);

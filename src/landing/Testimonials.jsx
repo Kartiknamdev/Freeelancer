@@ -3,24 +3,24 @@ import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 
 const testimonials = [
   {
-    quote: "Horizon has transformed how our team collaborates. We've seen a 30% increase in productivity since implementing it across our organization.",
-    author: "Sarah Johnson",
-    role: "CTO",
-    company: "TechCorp",
+    quote: "PeerTask helped me find a programming partner for my final project. Not only did we complete the task successfully, but I also made a great friend who continues to collaborate with me on side projects!",
+    author: "Kartik Namdev",
+    role: "Student",
+    company: "Computer Science",
     rating: 5
   },
   {
-    quote: "The intuitive interface made onboarding a breeze. Our team was up and running in minutes, not days. Highly recommend for any growing business.",
-    author: "Michael Chen",
-    role: "Product Manager",
-    company: "Innovate X",
-    rating: 5
+    quote: "As someone who struggles with time management, PeerTask has been a lifesaver. I found a peer who helped me organize my study schedule, and in return, I helped them with aptitude problems",
+    author: "Durgesh Kumar",
+    role: "Student",
+    company: "Computer Science",
+    rating: 4
   },
   {
-    quote: "As a remote team, communication was our biggest challenge. Horizon has bridged that gap, making it feel like we're all in the same room.",
-    author: "Emily Rodriguez",
-    role: "Head of Operations",
-    company: "Remote Co",
+    quote: "I needed help creating slides for a marketing presentation. Through PeerTask, I connected with a design student who created amazing visuals for me. The platform made the entire process safe and easy!",
+    author: "Priyam",
+    role: "Student",
+    company: "Computer Science",
     rating: 4
   }
 ];
@@ -81,16 +81,19 @@ const Testimonials = () => {
     );
   };
   
-  return (
-    <section id="testimonials" className="py-24 bg-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+  return (<section id="testimonials" className="relative min-h-screen flex items-center py-24 bg-gray-50 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-200 to-indigo-300 opacity-40 blur-2xl z-0" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400 rounded-full opacity-30 blur-3xl z-0" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500 rounded-full opacity-30 blur-3xl z-0" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16 animate-fade-in">
           <span className="text-indigo-600 font-semibold tracking-wider uppercase">Testimonials</span>
           <h2 className="mt-2 text-3xl md:text-4xl font-bold text-gray-900">
-            What our customers are saying
+            What Students Are Saying
           </h2>
           <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-            Don't just take our word for it. Here's what teams like yours have achieved with Horizon.
+            Read about the experiences of students who have used PeerTask
           </p>
         </div>
         

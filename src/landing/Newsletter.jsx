@@ -25,7 +25,7 @@ const Newsletter = () => {
             Stay updated with our newsletter
           </h2>
           <p className="mt-4 text-xl text-blue-100">
-            Join our newsletter for tips, product updates, and exclusive offers.
+            Join our newsletter for tips, New updates, and exclusive rewards.
           </p>
           
           {isSubmitted ? (
