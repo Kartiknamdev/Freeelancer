@@ -15,7 +15,7 @@ export const TaskProvider = ({ children }) => {
   const submitTask = async (taskDetails) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/v1/users/create-task",
+        "http://localhost:3000/api/v1/tasks/create-task",
         taskDetails,
         {
           headers: {
@@ -44,7 +44,7 @@ export const TaskProvider = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/v1/users/browse-task?userId=${userId}`
+        `http://localhost:3000/api/v1/tasks/browse-task?userId=${userId}`
       );
 
       const fetchedTasks = response.data?.data;
@@ -68,8 +68,8 @@ export const TaskProvider = ({ children }) => {
 
   // Optional: Auto-fetch tasks when component mounts
   useEffect(() => {
-    if (shouldFetchTasks && user?.id) {
-      fetchBrowseTasks(user.id);
+    if (shouldFetchTasks  && user?.user?._id) {
+      fetchBrowseTasks(user.user._id);
     }
   }, [shouldFetchTasks, user]);
 

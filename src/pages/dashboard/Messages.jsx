@@ -1,94 +1,136 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HiSearch, HiChat } from 'react-icons/hi';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import axios from 'axios';
-import {useAuth} from '../../contextStore/auth.context.jsx'
+import { useAuth } from '../../contextStore/auth.context.jsx';
+import { useMessage } from '../../contextStore/message.context.jsx';
+
 const Messages = () => {
-  const {user} = useAuth();
-  let currentUser = user.user
-  const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const currentUser = user?.user;
+ console.log('currentUser: ', currentUser);
+ console.log('accessToken: ', user.accessToken);
+  const {
+    loadConversations,
+    loadRecieverDetails,
+    loadMessages,
+    sendMessage,
+    conversations,
+    RecieverDetails,
+    messages,
+  } = useMessage();
+
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
 
-  // Load conversations on mount
+  const messagesEndRef = useRef(null);
+
+  // Auto scroll to latest message
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  // Load all conversations
   useEffect(() => {
     const fetchConversations = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:3000/api/v1/users/get-all-conversations/${user.id}`);
-        const convs = res.data; // [obj1,obj2,obj3]
-        setConversations(convs);
-        // If we have conversations, select the first one
-        // setSelectedConversation(convs[0]);
-        if (convs.length > 0) {
-          selectConversation(convs[0]);
+        const conversationList = await loadConversations(currentUser._id);
+        if (conversationList?.length > 0) {
+          setSelectedConversation(conversationList[0]);
         }
-      } catch (err) {
-        console.error('Failed to fetch conversations', err);
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
       } finally {
         setLoading(false);
       }
     };
+    if (currentUser?._id) fetchConversations();
+  }, [currentUser, loadConversations]);
 
-    fetchConversations();
-  }, []);
+  // Fetch receiver details for all conversations
+  useEffect(() => {
+    const fetchRecieverDetails = async () => {
+      setLoading(true);
+      try {
+        // Collect all other participant ids from conversations
+        const receiverIds = conversations.map(
+          (conversation) => conversation.otherParticipant._id
+        );
+        if (receiverIds.length > 0) {
+          await loadRecieverDetails(receiverIds);
+        }
+      } catch (error) {
+        console.error('Error fetching receiver details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (conversations.length > 0) fetchRecieverDetails();
+  }, [conversations, loadRecieverDetails]);
 
-  const selectConversation = async (conversationId) => {
-    setSelectedConversationId(conversationId);
-    try {
-      const res = await axios.get(`http://localhost:3000/api/v1/users/messages/${conversationId}`);
-      setMessages(res.data);
+  // Fetch messages for selected conversation
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedConversation) return;
+      setLoading(true);
+      try {
+        // Use conversationId to load messages (adjust to your API param)
+        await loadMessages(selectedConversation.conversationId, null, 20);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (selectedConversation) fetchMessages();
+  }, [selectedConversation, loadMessages]);
 
-      // Mark messages as read
-      await axios.put(`http://localhost:3000/api/v1/users/messages/read/${conversation._id}`, { userId: user.id });
-
-      // Update unread count in UI
-      setConversations((prev) =>
-        prev.map((c) =>
-          c._id === conversation._id ? { ...c, unreadCount: 0 } : c
-        )
-      );
-    } catch (err) {
-      console.error('Error selecting conversation', err);
-    }
-      console.log("second effect");  
+  // Select a conversation
+  const selectConversation = (conversation) => {
+    setSelectedConversation(conversation);
+    setNewMessage('');
   };
 
+  // Send message
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversationId) return;
-
-    // try {
-    //   const res = await axios.post('http://localhost:3000/api/v1/users/messages', {
-    //     conversationId: selectedConversation._id,
-    //     senderId: user.id,
-    //     receiverId: selectedConversation.otherParticipant._id,
-    //     content: newMessage,
-    //   });
-
-    //   setMessages([...messages, res.data]);
-    //   setNewMessage('');
-
-    //   setConversations((prev) =>
-    //     prev.map((c) =>
-    //       c._id === selectedConversation._id
-    //         ? { ...c, lastMessage: res.data }
-    //         : c
-    //     )
-    //   );
-    // } catch (err) {
-    //   console.error('Failed to send message', err);
-    // }
-      console.log("third effect");  
+    if (!newMessage.trim()) return;
+    setLoading(true);
+    try {
+      await sendMessage(
+        newMessage,
+        selectedConversation.conversationId,
+        currentUser._id,
+        selectedConversation.otherParticipant._id
+      );
+      setNewMessage('');
+      // Reload messages after sending
+      await loadMessages(selectedConversation.conversationId, null, 20);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
       setLoading(false);
+    }
   };
 
-  const filteredConversations = conversations.filter((conv) =>
-    conv.otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter conversations by other participant's name
+  const filteredConversations = conversations.filter((conversation) =>
+    conversation.otherParticipant.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
+
+  // Find current selected receiver details from RecieverDetails array
+  const currentReceiver = selectedConversation
+    ? RecieverDetails.find(
+        (r) => r._id === selectedConversation.otherParticipant._id
+      )
+    : null;
 
   return (
     <div>
@@ -165,7 +207,7 @@ const Messages = () => {
                             <div className="flex items-center justify-between">
                               {conversation.lastMessage ? (
                                 <p className="text-xs text-gray-500 truncate">
-                                  {conversation.lastMessage.senderId === user.id
+                                  {conversation.lastMessage.senderId === currentUser._id
                                     ? 'You: '
                                     : ''}
                                   {conversation.lastMessage.content}
@@ -191,7 +233,7 @@ const Messages = () => {
             </div>
           </div>
 
-          {/* Chat panel */}
+          {/* Chat Panel */}
           <div className="col-span-2 md:col-span-2 lg:col-span-3 flex flex-col h-full">
             {selectedConversation ? (
               <>
@@ -199,8 +241,8 @@ const Messages = () => {
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center">
                     <img
-                      src={selectedConversation.otherParticipant.avatar}
-                      alt={selectedConversation.otherParticipant.name}
+                      src={currentReceiver?.photo || selectedConversation.otherParticipant.avatar}
+                      alt={currentReceiver?.fullName || selectedConversation.otherParticipant.name}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                     <div className="ml-3">
@@ -208,7 +250,7 @@ const Messages = () => {
                         {selectedConversation.otherParticipant.name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {selectedConversation.otherParticipant.userType}
+                        {selectedConversation.otherParticipant.userType || ''}
                       </p>
                     </div>
                   </div>
@@ -217,13 +259,11 @@ const Messages = () => {
                 {/* Messages */}
                 <div className="flex-1 p-4 overflow-y-auto">
                   {messages.map((message) => {
-                    const isCurrentUser = message.senderId === user.id;
+                    const isCurrentUser = message.senderId === currentUser._id;
                     return (
                       <div
                         key={message._id}
-                        className={`flex ${
-                          isCurrentUser ? 'justify-end' : 'justify-start'
-                        } mb-4`}
+                        className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}
                       >
                         {!isCurrentUser && (
                           <img
@@ -234,25 +274,18 @@ const Messages = () => {
                         )}
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            isCurrentUser
-                              ? 'bg-primary-600 text-white'
-                              : 'bg-gray-100 text-gray-800'
+                            isCurrentUser ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-800'
                           }`}
                         >
                           <p className="text-sm">{message.content}</p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              isCurrentUser
-                                ? 'text-primary-100'
-                                : 'text-gray-500'
-                            }`}
-                          >
+                          <p className={`text-xs mt-1 ${isCurrentUser ? 'text-primary-100' : 'text-gray-500'}`}>
                             {format(new Date(message.timestamp), 'h:mm a')}
                           </p>
                         </div>
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input */}
@@ -265,11 +298,7 @@ const Messages = () => {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                     />
-                    <button
-                      type="submit"
-                      className="ml-3 btn-primary"
-                      disabled={!newMessage.trim()}
-                    >
+                    <button type="submit" className="ml-3 btn-primary" disabled={!newMessage.trim()}>
                       Send
                     </button>
                   </form>
@@ -279,9 +308,7 @@ const Messages = () => {
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <HiChat className="h-16 w-16 text-gray-300 mb-4" />
                 <p className="mb-1">No conversation selected</p>
-                <p className="text-sm">
-                  Select a conversation from the list to start chatting
-                </p>
+                <p className="text-sm">Select a conversation from the list to start chatting</p>
               </div>
             )}
           </div>
@@ -292,411 +319,4 @@ const Messages = () => {
 };
 
 export default Messages;
-
-// import { useState, useEffect } from 'react';
-// import { HiSearch, HiChat } from 'react-icons/hi';
-// import { format } from 'date-fns';
-// import { motion } from 'framer-motion';
-
-// const Messages = () => {
-//   // Mock user data
-//   const user = {
-//     id: 'user123',
-//     name: 'John Doe',
-//     userType: 'worker',
-//   };
-
-//   // Mock conversations data
-//   const mockConversations = [
-//     {
-//       id: 'conv1',
-//       participants: ['user123', 'user_1'],
-//     },
-//     {
-//       id: 'conv2',
-//       participants: ['user123', 'user_2'],
-//     },
-//   ];
-
-//   // Mock messages data
-//   const mockMessages = [
-//     {
-//       id: 'msg1',
-//       conversationId: 'conv1',
-//       senderId: 'user123',
-//       receiverId: 'user_1',
-//       content: 'Hello, how can I help you?',
-//       timestamp: '2025-05-01T10:00:00Z',
-//       read: true,
-//     },
-//     {
-//       id: 'msg2',
-//       conversationId: 'conv1',
-//       senderId: 'user_1',
-//       receiverId: 'user123',
-//       content: 'I need help with proofreading.',
-//       timestamp: '2025-05-01T10:05:00Z',
-//       read: true,
-//     },
-//     {
-//       id: 'msg3',
-//       conversationId: 'conv2',
-//       senderId: 'user_2',
-//       receiverId: 'user123',
-//       content: 'Can you assist with editing?',
-//       timestamp: '2025-05-02T14:00:00Z',
-//       read: false,
-//     },
-//   ];
-
-//   const [conversations, setConversations] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [selectedConversation, setSelectedConversation] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [newMessage, setNewMessage] = useState('');
-
-//   // Load conversations on mount
-//   useEffect(() => {
-//     // Filter conversations that include the current user
-//     const userConversations = mockConversations.filter((conv) =>
-//       conv.participants.includes(user.id)
-//     );
-
-//     // Get the last message for each conversation
-//     const conversationsWithDetails = userConversations.map((conv) => {
-//       const otherParticipantId = conv.participants.find((id) => id !== user.id);
-
-//       // Mock participant data
-//       const otherParticipant =
-//         otherParticipantId === 'user_1'
-//           ? {
-//               id: 'user_1',
-//               name: 'Alex Johnson',
-//               avatar:
-//                 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-//             }
-//           : {
-//               id: 'user_2',
-//               name: 'Sarah Miller',
-//               avatar:
-//                 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-//             };
-
-//       // Get the most recent message
-//       const conversationMessages = mockMessages.filter(
-//         (msg) => msg.conversationId === conv.id
-//       );
-
-//       const lastMessage = conversationMessages.sort(
-//         (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-//       )[0];
-
-//       // Count unread messages
-//       const unreadCount = conversationMessages.filter(
-//         (msg) => !msg.read && msg.receiverId === user.id
-//       ).length;
-
-//       return {
-//         ...conv,
-//         otherParticipant,
-//         lastMessage,
-//         unreadCount,
-//       };
-//     });
-
-//     // Sort by most recent message
-//     conversationsWithDetails.sort(
-//       (a, b) =>
-//         new Date(b.lastMessage?.timestamp || 0) -
-//         new Date(a.lastMessage?.timestamp || 0)
-//     );
-
-//     setConversations(conversationsWithDetails);
-
-//     // If we have conversations, select the first one
-//     if (conversationsWithDetails.length > 0) {
-//       setSelectedConversation(conversationsWithDetails[0]);
-
-//       // Get messages for the first conversation
-//       const firstConvMessages = mockMessages
-//         .filter((msg) => msg.conversationId === conversationsWithDetails[0].id)
-//         .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-//       setMessages(firstConvMessages);
-//     }
-
-//     setLoading(false);
-//   }, []);
-
-//   // Handle conversation selection
-//   const handleSelectConversation = (conversation) => {
-//     setSelectedConversation(conversation);
-
-//     // Get messages for this conversation
-//     const conversationMessages = mockMessages
-//       .filter((msg) => msg.conversationId === conversation.id)
-//       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-//     setMessages(conversationMessages);
-
-//     // Mark messages as read (in a real app, this would be an API call)
-//     setConversations((prevConversations) =>
-//       prevConversations.map((conv) =>
-//         conv.id === conversation.id ? { ...conv, unreadCount: 0 } : conv
-//       )
-//     );
-//   };
-
-//   // Handle sending a new message
-//   const handleSendMessage = (e) => {
-//     e.preventDefault();
-
-//     if (!newMessage.trim() || !selectedConversation) return;
-
-//     // Create new message
-//     const newMsg = {
-//       id: `msg_new_${Date.now()}`,
-//       conversationId: selectedConversation.id,
-//       senderId: user.id,
-//       receiverId: selectedConversation.otherParticipant.id,
-//       content: newMessage,
-//       timestamp: new Date().toISOString(),
-//       read: false,
-//     };
-
-//     // Update messages state
-//     setMessages([...messages, newMsg]);
-
-//     // Update conversation with new last message
-//     setConversations((prevConversations) =>
-//       prevConversations.map((conv) =>
-//         conv.id === selectedConversation.id
-//           ? {
-//               ...conv,
-//               lastMessage: newMsg,
-//             }
-//           : conv
-//       )
-//     );
-
-//     // Clear input
-//     setNewMessage('');
-//   };
-
-//   // Filter conversations by search term
-//   const filteredConversations = conversations.filter((conv) =>
-//     conv.otherParticipant.name.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
-//   return (
-//     <div>
-//       <div className="mb-6">
-//         <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-//         <p className="text-sm text-gray-600 mt-1">
-//           Communicate with clients and workers
-//         </p>
-//       </div>
-
-//       <div className="bg-white rounded-xl shadow-card overflow-hidden">
-//         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 h-[600px]">
-//           {/* Conversations sidebar */}
-//           <div className="col-span-1 bg-gray-50 border-r border-gray-200">
-//             <div className="p-4 border-b border-gray-200">
-//               <div className="relative rounded-md">
-//                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-//                   <HiSearch className="h-5 w-5 text-gray-400" />
-//                 </div>
-//                 <input
-//                   type="text"
-//                   className="form-input pl-10 text-sm"
-//                   placeholder="Search conversations"
-//                   value={searchTerm}
-//                   onChange={(e) => setSearchTerm(e.target.value)}
-//                 />
-//               </div>
-//             </div>
-
-//             <div className="h-[calc(600px-73px)] overflow-y-auto">
-//               {loading ? (
-//                 <div className="flex justify-center items-center h-full">
-//                   <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-gray-200 border-l-primary-600"></div>
-//                 </div>
-//               ) : filteredConversations.length === 0 ? (
-//                 <div className="p-4 text-center text-gray-500">
-//                   No conversations found
-//                 </div>
-//               ) : (
-//                 <ul className="divide-y divide-gray-200">
-//                   {filteredConversations.map((conversation) => (
-//                     <motion.li
-//                       key={conversation.id}
-//                       whileTap={{ backgroundColor: '#F3F4F6' }}
-//                     >
-//                       <button
-//                         className={`w-full text-left px-4 py-3 hover:bg-gray-100 focus:outline-none ${
-//                           selectedConversation?.id === conversation.id
-//                             ? 'bg-gray-100'
-//                             : ''
-//                         }`}
-//                         onClick={() => handleSelectConversation(conversation)}
-//                       >
-//                         <div className="flex items-center">
-//                           <img
-//                             src={conversation.otherParticipant.avatar}
-//                             alt={conversation.otherParticipant.name}
-//                             className="h-10 w-10 rounded-full object-cover"
-//                           />
-//                           <div className="ml-3 flex-1 min-w-0">
-//                             <div className="flex items-center justify-between">
-//                               <p className="text-sm font-medium text-gray-900 truncate">
-//                                 {conversation.otherParticipant.name}
-//                               </p>
-//                               {conversation.lastMessage && (
-//                                 <p className="text-xs text-gray-500">
-//                                   {format(
-//                                     new Date(conversation.lastMessage.timestamp),
-//                                     'h:mm a'
-//                                   )}
-//                                 </p>
-//                               )}
-//                             </div>
-//                             <div className="flex items-center justify-between">
-//                               {conversation.lastMessage ? (
-//                                 <p className="text-xs text-gray-500 truncate">
-//                                   {conversation.lastMessage.senderId === user.id
-//                                     ? 'You: '
-//                                     : ''}
-//                                   {conversation.lastMessage.content}
-//                                 </p>
-//                               ) : (
-//                                 <p className="text-xs text-gray-500">
-//                                   No messages yet
-//                                 </p>
-//                               )}
-//                               {conversation.unreadCount > 0 && (
-//                                 <span className="ml-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-primary-600 rounded-full">
-//                                   {conversation.unreadCount}
-//                                 </span>
-//                               )}
-//                             </div>
-//                           </div>
-//                         </div>
-//                       </button>
-//                     </motion.li>
-//                   ))}
-//                 </ul>
-//               )}
-//             </div>
-//           </div>
-
-//           {/* Chat area */}
-//           <div className="col-span-2 md:col-span-2 lg:col-span-3 flex flex-col h-full">
-//             {selectedConversation ? (
-//               <>
-//                 {/* Chat header */}
-//                 <div className="p-4 border-b border-gray-200">
-//                   <div className="flex items-center">
-//                     <img
-//                       src={selectedConversation.otherParticipant.avatar}
-//                       alt={selectedConversation.otherParticipant.name}
-//                       className="h-10 w-10 rounded-full object-cover"
-//                     />
-//                     <div className="ml-3">
-//                       <p className="text-sm font-medium text-gray-900">
-//                         {selectedConversation.otherParticipant.name}
-//                       </p>
-//                       <p className="text-xs text-gray-500">
-//                         {selectedConversation.otherParticipant.id === 'user_1'
-//                           ? 'Client'
-//                           : 'Worker'}
-//                       </p>
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 {/* Chat messages */}
-//                 <div className="flex-1 p-4 overflow-y-auto">
-//                   {messages.map((message, index) => {
-//                     const isCurrentUser = message.senderId === user.id;
-
-//                     return (
-//                       <div
-//                         key={message.id}
-//                         className={`flex ${
-//                           isCurrentUser ? 'justify-end' : 'justify-start'
-//                         } mb-4`}
-//                       >
-//                         {!isCurrentUser && (
-//                           <img
-//                             src={selectedConversation.otherParticipant.avatar}
-//                             alt={selectedConversation.otherParticipant.name}
-//                             className="h-8 w-8 rounded-full object-cover mr-2"
-//                           />
-//                         )}
-//                         <div
-//                           className={`
-//                             max-w-xs lg:max-w-md px-4 py-2 rounded-lg
-//                             ${
-//                               isCurrentUser
-//                                 ? 'bg-primary-600 text-white'
-//                                 : 'bg-gray-100 text-gray-800'
-//                             }
-//                           `}
-//                         >
-//                           <p className="text-sm">{message.content}</p>
-//                           <p
-//                             className={`
-//                             text-xs mt-1
-//                             ${
-//                               isCurrentUser
-//                                 ? 'text-primary-100'
-//                                 : 'text-gray-500'
-//                             }
-//                           `}
-//                           >
-//                             {format(new Date(message.timestamp), 'h:mm a')}
-//                           </p>
-//                         </div>
-//                       </div>
-//                     );
-//                   })}
-//                 </div>
-
-//                 {/* Chat input */}
-//                 <div className="p-4 border-t border-gray-200">
-//                   <form onSubmit={handleSendMessage} className="flex">
-//                     <input
-//                       type="text"
-//                       className="form-input flex-1"
-//                       placeholder="Type a message..."
-//                       value={newMessage}
-//                       onChange={(e) => setNewMessage(e.target.value)}
-//                     />
-//                     <button
-//                       type="submit"
-//                       className="ml-3 btn-primary"
-//                       disabled={!newMessage.trim()}
-//                     >
-//                       Send
-//                     </button>
-//                   </form>
-//                 </div>
-//               </>
-//             ) : (
-//               <div className="flex flex-col items-center justify-center h-full text-gray-500">
-//                 <HiChat className="h-16 w-16 text-gray-300 mb-4" />
-//                 <p className="mb-1">No conversation selected</p>
-//                 <p className="text-sm">
-//                   Select a conversation from the list to start chatting
-//                 </p>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Messages;
+// This code is a React component for a messaging dashboard. It includes features like searching conversations, displaying messages, and sending new messages. The component uses hooks for state management and effects for data fetching. The UI is styled using Tailwind CSS and includes loading states and error handling.

@@ -2,31 +2,42 @@ import { createContext, useContext, useState, useMemo } from "react";
 import axios from "axios";
 import { useAuth } from "./auth.context";
 
-// Create the context
+// Create context
 const messageContext = createContext();
 
 // Provider component
 export const MessageProvider = ({ children }) => {
   const { user } = useAuth();
-
-  // State variables
+  const accessToken = user?.accessToken;
+  const currentUserId = user?.user?._id;
+ 
   const [conversations, setConversations] = useState([]);
-  const [otherUserDetails, setOtherUserDetails] = useState([]);
+  const [receiverDetails, setReceiverDetails] = useState([]);
   const [messages, setMessages] = useState([]);
   const [read, setRead] = useState(false);
 
-  // Load all conversations for the current user
-  const loadConversations = async (userId) => {
+  // Load all conversations
+  const loadConversations = async function (userId) {
+    if (!userId || !accessToken) {
+      console.error("User ID or access token is missing");
+      return;
+    }
     try {
+      console.log("Loading conversations", currentUserId,accessToken);
       const response = await axios.get(
-        `http://localhost:3000/api/v1/users/get-conversations?userId=${userId}`
+        `http://localhost:3000/api/v1/messages_route/get-all-conversations?userId=${userId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
 
-      const conversationList = response.data;
+      const conversationList = response.data?.data;
       if (response.status === 200 && Array.isArray(conversationList)) {
         setConversations(conversationList);
       }
-      console.log("Conversations response:", conversationList);
       return conversationList;
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -34,25 +45,24 @@ export const MessageProvider = ({ children }) => {
     }
   };
 
-  // Load details of opponent users
-  const loadOtherUserDetails = async (opponentUserIds) => {
+  // Load receiver details
+  const loadReceiverDetails = async (opponentUserIds) => {
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/v1/users/get-other-user-details`,
+        `http://localhost:3000/api/v1/messages_route/get-other-user-details`,
         { opponentUserIds },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
 
-      const details = response.data;
+      const details = response.data?.data;
       if (response.status === 200 && Array.isArray(details)) {
-        setOtherUserDetails(details);
+        setReceiverDetails(details);
       }
-      console.log("Other user details response:", details);
       return details;
     } catch (error) {
       console.error("Error fetching other user details:", error);
@@ -60,11 +70,11 @@ export const MessageProvider = ({ children }) => {
     }
   };
 
-  // Load messages for a given conversation with pagination support
-  const loadMessages = async (conversationId, timeStamp, limit) => {
+  // Load messages
+  const loadMessages = async (conversationId, timeStamp, limit = 20) => {
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/v1/users/get-messages`,
+        `http://localhost:3000/api/v1/messages_route/get-messages`,
         {
           params: {
             conversationId,
@@ -74,11 +84,10 @@ export const MessageProvider = ({ children }) => {
         }
       );
 
-      const messagesList = response.data;
+      const messagesList = response.data?.data;
       if (response.status === 200 && Array.isArray(messagesList)) {
         setMessages(messagesList);
       }
-      console.log("Messages response:", messagesList);
       return messagesList;
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -86,70 +95,66 @@ export const MessageProvider = ({ children }) => {
     }
   };
 
-  // Send a message to a conversation
-  const sendMessage = async (content, conversationId, senderId, recieverId) => {
+  // Send a message
+  const sendMessage = async (content, conversationId, receiverId) => {
     try {
+      const senderId = currentUserId;
       const response = await axios.post(
-        "http://localhost:3000/api/v1/users/send-message",
-        { content, conversationId, senderId, recieverId },
+        "http://localhost:3000/api/v1/messages_route/send-message",
+        { content, conversationId, senderId, recieverId: receiverId },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
 
-      if (response.status === 201) {
-        console.log("Message sent successfully:", response.data);
-        return response.data;
-      }
+      return response.data?.data;
     } catch (error) {
       console.error("Error sending message:", error);
       throw error;
     }
   };
 
-  // Create a new conversation
-  const createConversation = async ( recieverId) => {
-    console.log("reached createConversation");
+  // Create a conversation
+  const createConversation = async (senderId,recieverId) => {
     try {
+      alert("Creating conversation",currentUserId, recieverId);
       const response = await axios.post(
-        "http://localhost:3000/api/v1/users/create-conversation",
-         {recieverId},
+        "http://localhost:3000/api/v1/messages_route/create-conversation",
+        { senderId,
+          recieverId, 
+        },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
 
-      if (response.status === 201) {
-        alert("Conversation created successfully");
-        console.log("Conversation created:", response.data);
-        return response.data;
-      }
+      return response.data?.data;
     } catch (error) {
       console.error("Error creating conversation:", error);
       throw error;
     }
   };
 
-  // Collect all functions and states into context value
+  // Context value
   const contextValue = useMemo(
     () => ({
       createConversation,
       conversations,
-      otherUserDetails,
+      receiverDetails,
       messages,
       read,
       loadConversations,
-      loadOtherUserDetails,
+      loadReceiverDetails,
       loadMessages,
       sendMessage,
     }),
-    [conversations, otherUserDetails, messages, read]
+    [conversations, receiverDetails, messages, read]
   );
 
   return (
@@ -159,7 +164,7 @@ export const MessageProvider = ({ children }) => {
   );
 };
 
-// Hook to use the MessageContext
+// Hook to use the message context
 export const useMessage = () => {
   const context = useContext(messageContext);
   if (!context) {
