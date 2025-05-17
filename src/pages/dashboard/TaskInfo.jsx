@@ -9,7 +9,7 @@ import { useMessage } from "../../contextStore/message.context.jsx";
 export default function TaskInfo() {
   const { user } = useAuth();
   const { tasks } = useTasks();
-  const senderId = user.user._id;
+  const senderId = user?.user?._id;
   const recieverId = useParams().createdBy;
   const { createConversation } = useMessage();
   const { taskId } = useParams();
@@ -30,11 +30,9 @@ export default function TaskInfo() {
     // call the create conversation function from the message context
     try {
       const response = await createConversation(senderId,recieverId);
-      if (response) {
         alert("Conversation created successfully");
         console.log("Conversation created successfully:", response.data);
         navigate("/dashboardLayout/messages");
-      }
     } catch (error) {
       console.error("Error creating conversation:", error);
       // Handle error (e.g., show a notification)
