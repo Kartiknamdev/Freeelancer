@@ -52,7 +52,7 @@ export default function TaskInfo() {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full bg-inherit border-2 rounded-lg  p-8"
+        className="w-full p-4 bg-inherit border-2 rounded-lg "
       >
         {/* Overview */}
         <div className="flex items-center gap-2 mb-6">
@@ -60,9 +60,13 @@ export default function TaskInfo() {
           <h2 className="text-2xl font-bold text-gray-800">Task Overview</h2>
         </div>
         {/* description */}
-        <div className="mb-6">
+        <div className="mb-6 border-gray-200 p-6  border-2 rounded-md">
           <p className="font-semibold">Description:</p>
           <p className="mt-1">{task.description}</p>
+        </div>
+        <div className="mb-6 border-gray-200  p-6 border-2 rounded-md">
+          <p className="font-semibold">Requirements:</p>
+          <p className="mt-1">{task.requirements}</p>
         </div>
         <div className=" flex justify-between text-gray-700">
           <div>
