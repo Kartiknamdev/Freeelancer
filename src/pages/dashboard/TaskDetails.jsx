@@ -13,17 +13,15 @@ import {
   HiChat
 } from 'react-icons/hi'
 import { format, formatDistance } from 'date-fns'
-import { useTasks } from '../../hooks/useTasks'
-import { useAuth } from '../../hooks/useAuth'
-import { useNotifications } from '../../hooks/useNotifications'
-import { motion } from 'framer-motion'
+import { useTasks } from '../../contextStore/task.context'
+import { useAuth } from '../../contextStore/auth.context'
+ import { motion } from 'framer-motion'
 
 const TaskDetails = () => {
   const { taskId } = useParams()
   const { getTaskById, applyForTask, assignTask, completeTask, processPayment } = useTasks()
   const { user } = useAuth()
-  const { addNotification } = useNotifications()
-  const navigate = useNavigate()
+   const navigate = useNavigate()
   
   const [task, setTask] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -83,16 +81,16 @@ const TaskDetails = () => {
       setCoverLetter('')
       
       // Add notification
-      addNotification({
-        type: 'success',
-        content: 'Your application was submitted successfully!'
-      })
+      // addNotification({
+      //   type: 'success',
+      //   content: 'Your application was submitted successfully!'
+      // })
     } catch (error) {
       console.error('Error applying for task:', error)
-      addNotification({
-        type: 'error',
-        content: 'Failed to submit application. Please try again.'
-      })
+      // addNotification({
+      //   type: 'error',
+      //   content: 'Failed to submit application. Please try again.'
+      // })
     } finally {
       setApplying(false)
     }
@@ -110,16 +108,16 @@ const TaskDetails = () => {
       setTask(updatedTask)
       
       // Add notification
-      addNotification({
-        type: 'success',
-        content: 'Task assigned successfully!'
-      })
+      // addNotification({
+      //   type: 'success',
+      //   content: 'Task assigned successfully!'
+      // })
     } catch (error) {
       console.error('Error assigning task:', error)
-      addNotification({
-        type: 'error',
-        content: 'Failed to assign task. Please try again.'
-      })
+      // addNotification({
+      //   type: 'error',
+      //   content: 'Failed to assign task. Please try again.'
+      // })
     } finally {
       setActionLoading(false)
     }
@@ -137,16 +135,16 @@ const TaskDetails = () => {
       setTask(updatedTask)
       
       // Add notification
-      addNotification({
-        type: 'success',
-        content: 'Task marked as completed!'
-      })
+      // addNotification({
+      //   type: 'success',
+      //   content: 'Task marked as completed!'
+      // })
     } catch (error) {
       console.error('Error completing task:', error)
-      addNotification({
-        type: 'error',
-        content: 'Failed to complete task. Please try again.'
-      })
+      // addNotification({
+      //   type: 'error',
+      //   content: 'Failed to complete task. Please try again.'
+      // })
     } finally {
       setActionLoading(false)
     }
@@ -164,16 +162,16 @@ const TaskDetails = () => {
       setTask(updatedTask)
       
       // Add notification
-      addNotification({
-        type: 'success',
-        content: 'Payment processed successfully!'
-      })
+      // addNotification({
+      //   type: 'success',
+      //   content: 'Payment processed successfully!'
+      // })
     } catch (error) {
       console.error('Error processing payment:', error)
-      addNotification({
-        type: 'error',
-        content: 'Failed to process payment. Please try again.'
-      })
+      // addNotification({
+      //   type: 'error',
+      //   content: 'Failed to process payment. Please try again.'
+      // })
     } finally {
       setActionLoading(false)
     }
