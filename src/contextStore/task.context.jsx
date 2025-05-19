@@ -15,7 +15,7 @@ export const TaskProvider = ({ children }) => {
   const submitTask = async (taskDetails) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/v1/tasks/create-task",
+        "https://freelancer-backend.vercel.app/api/v1/tasks/create-task",
         taskDetails,
         {
           headers: {
@@ -44,7 +44,7 @@ export const TaskProvider = ({ children }) => {
 
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/v1/tasks/browse-task?userId=${userId}`
+        `https://freelancer-backend.vercel.app/api/v1/tasks/browse-task?userId=${userId}`
       );
 
       const fetchedTasks = response.data?.data;

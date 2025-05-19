@@ -27,26 +27,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
-  const handleDemoLogin = async (type) => {
-    setLoading(true);
-
-    try {
-      const demoCredentials =
-        type === "client"
-          ? { email: "alex@example.com", password: "password123" }
-          : { email: "sarah@example.com", password: "password123" };
-
-      // Simulate saving a token for demo purposes
-      localStorage.setItem("token", "demo-token");
-      localStorage.setItem("user", JSON.stringify(demoCredentials));
-      navigate("/dashboardLayout/dashboard");
-    } catch (err) {
-      setError("Demo login failed");
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-gray-100">
       <motion.div

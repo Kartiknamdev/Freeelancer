@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const registerUser = async (fullName, email, password) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/v1/users/register",
+        "https://freelancer-backend.vercel.app/api/v1/users/register",
         { fullName, email, password }
       );
       if (response) {
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   const loginUser = async (email, password) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/v1/users/login",
+        "https://freelancer-backend.vercel.app/api/v1/users/login",
         { email, password }
       );
       if (response) {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   const updateDetails = async (formData) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/v1/users/update_details",
+        "https://freelancer-backend.vercel.app/api/v1/users/update_details",
         formData,
         {
           headers: {

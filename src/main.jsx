@@ -9,7 +9,7 @@ import { AuthProvider } from "./contextStore/auth.context.jsx";
 import { MessageProvider } from "./contextStore/message.context.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+
     <AuthProvider>
       <TaskProvider>
         <MessageProvider>
@@ -19,5 +19,5 @@ createRoot(document.getElementById("root")).render(
         </MessageProvider>
       </TaskProvider>
     </AuthProvider>
-  </StrictMode>
+
 );

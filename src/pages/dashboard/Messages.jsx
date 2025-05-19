@@ -4,23 +4,22 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useAuth } from "../../contextStore/auth.context.jsx";
 import { useMessage } from "../../contextStore/message.context.jsx";
+import defaultImage from "../../assets/image.png";
 
 const Messages = () => {
   const { user } = useAuth();
   const currentUser = user?.user;
-  //  console.log('currentUser: ', currentUser);
-  //  console.log('accessToken: ', user.accessToken);
+  const messageRef = useRef(null);
+
   const {
     loadConversations,
     loadRecieverDetails,
     loadMessages,
     sendMessage,
-    conversations, // conversations: [{
-    // conversationId, receiverId}],
-    RecieverDetails, // RecieverDetails: [{
-    // _id, photo,fullName, updatedAt}],
-    messages, // messages: [{
-    // _id, content, conversationId, senderId, recieverId, read, createdAt}],
+    conversations,
+    RecieverDetails,
+    FetchedMessages,
+    messages,
   } = useMessage();
 
   const [loading, setLoading] = useState(false);
@@ -37,9 +36,11 @@ const Messages = () => {
     }
   }, [messages]);
 
-  // Load all conversations
+  // Load all conversations once after user is available
   useEffect(() => {
     const fetchConversations = async () => {
+      if (conversations.length > 0 || !currentUser?._id) return; // Prevent re-fetching
+      // Check if conversations are already loaded
       setLoading(true);
       try {
         const conversationList = await loadConversations(currentUser._id);
@@ -55,18 +56,19 @@ const Messages = () => {
     if (currentUser?._id) fetchConversations();
   }, [currentUser]);
 
-  // Fetch receivers details for all conversations
+  // Load receiver details only once when conversations are available
   useEffect(() => {
+    // Check if receiver details are already fetched Check if conversations are available
     const fetchRecieverDetails = async () => {
+      if (RecieverDetails.length > 0 || conversations.length === 0) return;
       setLoading(true);
       try {
-        // Collect all other participant ids from conversations
-        const recieverIds = new Set(
-          conversations.map((conversation) => conversation.receiverId)
+        const recieverIds = conversations.map(
+          (conversation) => conversation.recieverId
         );
-        console.log("recieverIds: ", recieverIds);
         if (recieverIds.length > 0) {
           await loadRecieverDetails(recieverIds);
+          setFetchedReceivers(true); // ✅ Prevent re-fetching
         }
       } catch (error) {
         console.error("Error fetching receiver details:", error);
@@ -74,23 +76,25 @@ const Messages = () => {
         setLoading(false);
       }
     };
-    if (conversations.length > 0) fetchRecieverDetails();
-  }, [conversations, loadRecieverDetails]);
+    fetchRecieverDetails();
+  }, [conversations, RecieverDetails]);
 
-  // Fetch messages for selected conversation
+  // Fetch messages when a conversation is selected
   useEffect(() => {
+    // Check if selected conversation is available  Check if messages are already loaded
     const fetchMessages = async () => {
+      if (FetchedMessages) return; // Prevent re-fetching
       if (!selectedConversation) return;
       setLoading(true);
       try {
-        // Use conversationId to load messages (adjust to your API param)
-        await loadMessages(selectedConversation.conversationId, null, 20);
+        await loadMessages(selectedConversation._id, null, 20);
       } catch (error) {
         console.error("Error fetching messages:", error);
       } finally {
         setLoading(false);
       }
     };
+
     if (selectedConversation) fetchMessages();
   }, [selectedConversation, loadMessages]);
 
@@ -103,18 +107,19 @@ const Messages = () => {
   // Send message
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    console.log(newMessage)
+    setNewMessage(messageRef.current.value)
     if (!newMessage.trim()) return;
+
     setLoading(true);
     try {
       await sendMessage(
         newMessage,
-        selectedConversation.conversationId,
-        currentUser._id,
-        selectedConversation.receiverId
+        selectedConversation._id,
+        selectedConversation.recieverId
       );
       setNewMessage("");
-      // Reload messages after sending
-      await loadMessages(selectedConversation.conversationId, null, 20);
+      await loadMessages(selectedConversation._id, null, 20);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -127,22 +132,22 @@ const Messages = () => {
   //          conversationId,
   //           receiverId,
   //        }
- const filteredConversations = conversations.filter((conversation) => {
-  if (!Array.isArray(RecieverDetails)) return false;
+  const filteredConversations = conversations.filter((conversation) => {
+    if (!Array.isArray(RecieverDetails)) return false;
 
-  const receiver = RecieverDetails.find(
-    (receiverDetail) => receiverDetail._id === conversation.receiverId
-  );
+    const receiver = RecieverDetails.find(
+      (receiverDetail) => receiverDetail._id === conversation.recieverId
+    );
 
-  const name = receiver?.fullName || '';
-  return name.toLowerCase().includes(searchTerm.toLowerCase());
-});
-
+    const name = receiver?.fullName || "";
+    return name.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   // Find current selected receiver details from RecieverDetails array
   const currentReceiver = selectedConversation
     ? RecieverDetails.find(
-        (RecieverDetail) => RecieverDetail._id === selectedConversation.receiverId
+        (RecieverDetail) =>
+          RecieverDetail._id === selectedConversation.recieverId
       )
     : null;
 
@@ -188,10 +193,10 @@ const Messages = () => {
                   {filteredConversations.map((conversation) => {
                     const receiver = RecieverDetails.find(
                       (receiverDetail) =>
-                        receiverDetail._id === conversation.receiverId
+                        receiverDetail._id === conversation.recieverId
                     );
 
-                    const photo = receiver?.photo || "/default-avatar.png";
+                    const photo = receiver?.photo || { defaultImage };
                     const name = receiver?.fullName || "Unknown";
 
                     return (
@@ -201,7 +206,8 @@ const Messages = () => {
                       >
                         <button
                           className={`w-full text-left px-4 py-3 hover:bg-gray-100 focus:outline-none ${
-                            selectedConversation?._id === conversation.receiverId
+                            selectedConversation?._id ===
+                            conversation.recieverId
                               ? "bg-gray-100"
                               : ""
                           }`}
@@ -218,34 +224,31 @@ const Messages = () => {
                                 <p className="text-sm font-medium text-gray-900 truncate">
                                   {name}
                                 </p>
-                                {/* {conversation.lastMessage && (
+                                {conversation.lastMessage && (
                                   <p className="text-xs text-gray-500">
                                     {format(
-                                      new Date(
-                                        conversation.lastMessage.timestamp
-                                      ),
+                                      new Date(conversation.lastMessage),
                                       "h:mm a"
                                     )}
                                   </p>
-                                )} */}
+                                )}
                               </div>
                               <div className="flex items-center justify-between">
-                                {/* {conversation.lastMessage ? (
+                                {conversation.lastMessage ? (
                                   <p className="text-xs text-gray-500 truncate">
-                                    {conversation.lastMessage.senderId ===
-                                    currentUser._id
+                                    {conversation.senderId === currentUser._id
                                       ? "You: "
                                       : ""}
-                                    {conversation.lastMessage.content}
+                                    {"Lesson Summary."}
                                   </p>
                                 ) : (
                                   <p className="text-xs text-gray-500">
                                     No messages yet
                                   </p>
                                 )}
-                                {conversation.unreadCount > 0 && (
+                                {/* {conversation.unreadCount > 0 && (
                                   <span className="ml-1 px-2 py-1 text-xs font-bold text-white bg-primary-600 rounded-full">
-                                    {conversation.unreadCount}
+                                    {5}
                                   </span>
                                 )} */}
                               </div>
@@ -268,12 +271,8 @@ const Messages = () => {
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center">
                     <img
-                      src={
-                        currentReceiver?.photo
-                      }
-                      alt={
-                        currentReceiver?.fullName || "Unknown"
-                      }
+                      src={currentReceiver?.photo}
+                      alt={currentReceiver?.fullName || "Unknown"}
                       className="h-10 w-10 rounded-full object-cover"
                     />
                     <div className="ml-3">
@@ -295,42 +294,45 @@ const Messages = () => {
                 {/* Messages */}
                 <div className="flex-1 p-4 overflow-y-auto">
                   {messages.map((message) => {
-                    const isCurrentUser = message.senderId === currentUser._id;
+                    const isCurrentUser = message.sender === currentUser._id;
+                    console.log(message.sender,currentUser._id);
                     return (
                       <div
                         key={message._id}
-                        className={`flex ${
+                        className={`flex items-baseline ${
                           isCurrentUser ? "justify-end" : "justify-start"
-                        } mb-4`}
+                        } mb-2`}
                       >
                         {!isCurrentUser && (
                           <img
-                            src={currentReceiver.photo}
-                            alt={currentReceiver.fullName}
+                            src={currentReceiver?.photo}
+                            alt={currentReceiver?.fullName || "Unknown"}
                             className="h-8 w-8 rounded-full object-cover mr-2"
                           />
                         )}
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                             isCurrentUser
-                              ? "bg-primary-600 text-white"
+                              ? "bg-primary-400 text-white"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           <p className="text-sm">{message.content}</p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              isCurrentUser
-                                ? "text-primary-100"
-                                : "text-gray-500"
-                            }`}
-                          >
+                          <p className="text-xs mt-1 text-right text-gray-500">
                             {format(new Date(message.updatedAt), "h:mm a")}
                           </p>
                         </div>
+                        {isCurrentUser && (
+                          <img
+                            src={currentUser?.photo}
+                            alt={currentUser?.fullName || "You"}
+                            className="h-8 w-8 rounded-full object-cover ml-2"
+                          />
+                        )}
                       </div>
                     );
                   })}
+
                   <div ref={messagesEndRef} />
                 </div>
 
@@ -341,8 +343,7 @@ const Messages = () => {
                       type="text"
                       className="form-input flex-1"
                       placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      ref={messageRef}
                     />
                     <button
                       type="submit"

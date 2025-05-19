@@ -12,6 +12,7 @@ export const MessageProvider = ({ children }) => {
   const [conversations, setConversations] = useState([]);
   const [RecieverDetails, setRecieverDetails] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [FetchedMessages, setFetchedMessages] = useState(false);
   const [read, setRead] = useState(false);
 
   // Create a conversation
@@ -19,7 +20,7 @@ export const MessageProvider = ({ children }) => {
     try {
       alert("Creating conversation");
       const response = await axios.post(
-        "http://localhost:3000/api/v1/messages_route/create-conversation",
+        "https://freelancer-backend.vercel.app/api/v1/messages_route/create-conversation",
         { senderId, recieverId },
         {
           headers: {
@@ -40,7 +41,7 @@ export const MessageProvider = ({ children }) => {
     try {
       // console.log("Loading conversations", userId,accessToken);
       const response = await axios.get(
-        `http://localhost:3000/api/v1/messages_route/get-all-conversations?userId=${userId}`,
+        `https://freelancer-backend.vercel.app/api/v1/messages_route/get-all-conversations?userId=${userId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -61,13 +62,12 @@ export const MessageProvider = ({ children }) => {
     }
   };
 
-  // Load receiver details
   const loadRecieverDetails = async (recieverIds) => {
     try {
-     alert("Loading receiver details");     
-      const response = await axios.get(
-        `http://localhost:3000/api/v1/messages_route/get-all-reciever-details`,
-        {recieverIds},
+      alert("Loading receiver details");
+      const response = await axios.post(
+        `https://freelancer-backend.vercel.app/api/v1/messages_route/get-all-reciever-details`,
+        { recieverIds },
         {
           headers: {
             "Content-Type": "application/json",
@@ -90,15 +90,22 @@ export const MessageProvider = ({ children }) => {
   };
 
   // Load messages
-  const loadMessages = async (conversationId, timeStamp, limit = 20) => {
+  const loadMessages = async (conversationId, timeStamp=null, limit = 20) => {
     try {
-      const response = await axios.get(
-        `http://localhost:3000/api/v1/messages_route/get-messages`,
+      setFetchedMessages(true);
+      alert("Loading messages");
+      const response = await axios.post(
+        `https://freelancer-backend.vercel.app/api/v1/messages_route/get-messages`,
         {
-          params: {
-            conversationId,
-            timeStamp,
-            limit,
+          senderId:user?.user?._id,
+          conversationId,
+          timeStamp,
+          limit,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.accessToken}`,
           },
         }
       );
@@ -119,8 +126,19 @@ export const MessageProvider = ({ children }) => {
   const sendMessage = async (content, conversationId, recieverId) => {
     try {
       const senderId = user?.user?._id;
+      alert("sending message");
+      console.log(
+        content,
+        "\n",
+        conversationId,
+        "\n",
+        senderId,
+        "\n",
+        recieverId,
+        "\n"
+      );
       const response = await axios.post(
-        "http://localhost:3000/api/v1/messages_route/send-message",
+        "https://freelancer-backend.vercel.app/api/v1/messages_route/send-message",
         { content, conversationId, senderId, recieverId },
         {
           headers: {
@@ -129,7 +147,9 @@ export const MessageProvider = ({ children }) => {
           },
         }
       );
-
+      if (response.status === 201) {
+        console.log("message sent: ", response.data?.data);
+      }
       return response.data?.data;
     } catch (error) {
       console.error("Error sending message:", error);
@@ -144,6 +164,7 @@ export const MessageProvider = ({ children }) => {
       conversations,
       RecieverDetails,
       messages,
+      FetchedMessages,
       read,
       loadConversations,
       loadRecieverDetails,
