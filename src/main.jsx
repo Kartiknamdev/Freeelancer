@@ -7,9 +7,9 @@ import LoadingScreen from "./components/ui/LoadingScreen.jsx";
 import { TaskProvider } from "./contextStore/task.context.jsx";
 import { AuthProvider } from "./contextStore/auth.context.jsx";
 import { MessageProvider } from "./contextStore/message.context.jsx";
-
+import { BACKEND_URL } from "../constant.js";
 createRoot(document.getElementById("root")).render(
-
+ 
     <AuthProvider>
       <TaskProvider>
         <MessageProvider>

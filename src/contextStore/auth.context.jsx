@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import axios from "axios";
+import { BACKEND_URL } from "../../constant";
 
 const AuthContext = createContext();
 
@@ -12,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   const registerUser = async (fullName, email, password) => {
     try {
       const response = await axios.post(
-        "https://freelancer-backend.vercel.app/api/v1/users/register",
+        `${BACKEND_URL}/users/register`,
         { fullName, email, password }
       );
       if (response) {
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const loginUser = async (email, password) => {
     try {
       const response = await axios.post(
-        "https://freelancer-backend.vercel.app/api/v1/users/login",
+        `${BACKEND_URL}/users/login`,
         { email, password }
       );
       if (response) {
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
   const updateDetails = async (formData) => {
     try {
       const response = await axios.post(
-        "https://freelancer-backend.vercel.app/api/v1/users/update_details",
+        `${BACKEND_URL}/users/update_details`,
         formData,
         {
           headers: {

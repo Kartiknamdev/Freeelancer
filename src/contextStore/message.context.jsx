@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useMemo } from "react";
 import axios from "axios";
 import { useAuth } from "./auth.context";
+import { BACKEND_URL } from "../../constant";
 
 // Create context
 const messageContext = createContext();
@@ -20,7 +21,7 @@ export const MessageProvider = ({ children }) => {
     try {
       alert("Creating conversation");
       const response = await axios.post(
-        "https://freelancer-backend.vercel.app/api/v1/messages_route/create-conversation",
+        `${BACKEND_URL}/messages_route/create-conversation`,
         { senderId, recieverId },
         {
           headers: {
@@ -41,7 +42,7 @@ export const MessageProvider = ({ children }) => {
     try {
       // console.log("Loading conversations", userId,accessToken);
       const response = await axios.get(
-        `https://freelancer-backend.vercel.app/api/v1/messages_route/get-all-conversations?userId=${userId}`,
+        `${BACKEND_URL}/messages_route/get-all-conversations?userId=${userId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -53,7 +54,7 @@ export const MessageProvider = ({ children }) => {
       const conversationList = response.data?.data;
       if (response.status === 200 && Array.isArray(conversationList)) {
         setConversations(conversationList);
-        console.log("Conversations loaded:", conversationList);
+        // console.log("Conversations loaded:", conversationList);
       }
       return conversationList;
     } catch (error) {
@@ -66,7 +67,7 @@ export const MessageProvider = ({ children }) => {
     try {
       alert("Loading receiver details");
       const response = await axios.post(
-        `https://freelancer-backend.vercel.app/api/v1/messages_route/get-all-reciever-details`,
+        `${BACKEND_URL}/messages_route/get-all-reciever-details`,
         { recieverIds },
         {
           headers: {
@@ -79,7 +80,7 @@ export const MessageProvider = ({ children }) => {
       const details = response.data?.data;
       if (response.status === 200 && Array.isArray(details)) {
         alert("Receiver details loaded");
-        console.log("ReceiverDetails loaded:", details);
+        // console.log("ReceiverDetails loaded:", details);
         setRecieverDetails(details);
       }
       return details;
@@ -93,9 +94,8 @@ export const MessageProvider = ({ children }) => {
   const loadMessages = async (conversationId, timeStamp=null, limit = 20) => {
     try {
       setFetchedMessages(true);
-      alert("Loading messages");
-      const response = await axios.post(
-        `https://freelancer-backend.vercel.app/api/v1/messages_route/get-messages`,
+       const response = await axios.post(
+        `${BACKEND_URL}/messages_route/get-messages`,
         {
           senderId:user?.user?._id,
           conversationId,
@@ -112,7 +112,7 @@ export const MessageProvider = ({ children }) => {
 
       const messagesList = response.data?.data;
       if (response.status === 200 && Array.isArray(messagesList)) {
-        console.log("messages loaded:", messagesList);
+        // console.log("messages loaded:", messagesList);
         setMessages(messagesList);
       }
       return messagesList;
@@ -126,19 +126,19 @@ export const MessageProvider = ({ children }) => {
   const sendMessage = async (content, conversationId, recieverId) => {
     try {
       const senderId = user?.user?._id;
-      alert("sending message");
-      console.log(
-        content,
-        "\n",
-        conversationId,
-        "\n",
-        senderId,
-        "\n",
-        recieverId,
-        "\n"
-      );
+      // alert("sending message");
+      // console.log(
+      //   content,
+      //   "\n",
+      //   conversationId,
+      //   "\n",
+      //   senderId,
+      //   "\n",
+      //   recieverId,
+      //   "\n"
+      // );
       const response = await axios.post(
-        "https://freelancer-backend.vercel.app/api/v1/messages_route/send-message",
+        `${BACKEND_URL}/messages_route/send-message`,
         { content, conversationId, senderId, recieverId },
         {
           headers: {
@@ -148,7 +148,7 @@ export const MessageProvider = ({ children }) => {
         }
       );
       if (response.status === 201) {
-        console.log("message sent: ", response.data?.data);
+        // console.log("message sent: ", response.data?.data);
       }
       return response.data?.data;
     } catch (error) {

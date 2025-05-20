@@ -95,9 +95,9 @@ const CreateTask = () => {
     files.forEach((file) => formData.append("attachments", file));
 
     // Debug print
-    for (let [key, value] of formData.entries()) {
-      console.log(`this is from createTask:  ${key}:`, value);
-    }
+    // for (let [key, value] of formData.entries()) {
+    //   console.log(`this is from createTask:  ${key}:`, value);
+    // }
     
     try {
       const result = await submitTask(formData);
