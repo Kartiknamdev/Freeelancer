@@ -103,7 +103,6 @@ const CreateTask = () => {
       const result = await submitTask(formData);
       if (result?.status === 201) {
         alert("Task created successfully");
-        // navigate("/history");
       } else {
         alert("Something went wrong");
       }
