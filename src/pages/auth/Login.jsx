@@ -7,46 +7,27 @@ import { FaXTwitter } from "react-icons/fa6";
 import { useAuth } from "../../contextStore/auth.context";
 
 const Login = () => {
-  const {loginUser} = useAuth();
+  const { loginUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [LoginError, setLoginError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       await loginUser(email, password);
       navigate("/dashboardLayout/dashboard"); // Redirect to dashboard on success
     } catch (err) {
-      setLoginError(err.response?.data?.message || "Login failed");
+      setLoginError("Login failed");
+      setEmail('');
+      setPassword('')
     } finally {
       setLoading(false);
     }
   };
-
-  const handleDemoLogin = async (type) => {
-    setLoading(true);
-
-    try {
-      const demoCredentials =
-        type === "client"
-          ? { email: "alex@example.com", password: "password123" }
-          : { email: "sarah@example.com", password: "password123" };
-
-      // Simulate saving a token for demo purposes
-      localStorage.setItem("token", "demo-token");
-      localStorage.setItem("user", JSON.stringify(demoCredentials));
-      navigate("/dashboardLayout/dashboard");
-    } catch (err) {
-      setError("Demo login failed");
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-gray-100">
       <motion.div
@@ -59,13 +40,13 @@ const Login = () => {
           Sign in to your account
         </h2>
 
-        {error && (
+        {LoginError && (
           <motion.div
             className="bg-red-100 text-red-700 p-3 rounded-md mb-4"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            {error}
+            {LoginError}
           </motion.div>
         )}
 

@@ -241,17 +241,17 @@ export default function BrowseTasks() {
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {filteredTasks.map((task) => {
+            {filteredTasks.map((task,index) => {
               return (
                 <motion.li
-                  key={task.id}
+                  key={index}
+                  className="hover:bg-gray-50 transition-colors"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 >
                   <Link
-                    key={task.id}
-                    to={`/dashboardLayout/browse-tasks/${task._id}`}
+                    to={`/dashboardLayout/browse-tasks/${task._id}/${task.createdBy}`}
                     className="block hover:bg-gray-50 transition-colors"
                   >
                     <div className="px-6 py-4">

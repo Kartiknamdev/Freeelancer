@@ -7,8 +7,7 @@ import {
   HiOutlineTag,
 } from "react-icons/hi";
 import { motion } from "framer-motion";
-import { useTasks } from "../../contextStore/task.context";
-
+import { useTasks } from "../../contextStore/task.context"
 const categories = [
   "ProofReading",
   "Editing",
@@ -23,7 +22,7 @@ const categories = [
 
 const CreateTask = () => {
   const navigate = useNavigate();
-  const { SubmitTask } = useTasks();
+  const { submitTask } = useTasks();
 
   // Form refs
   const titleRef = useRef();
@@ -96,15 +95,14 @@ const CreateTask = () => {
     files.forEach((file) => formData.append("attachments", file));
 
     // Debug print
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
+    // for (let [key, value] of formData.entries()) {
+    //   console.log(`this is from createTask:  ${key}:`, value);
+    // }
     
     try {
-      const result = await SubmitTask(formData);
+      const result = await submitTask(formData);
       if (result?.status === 201) {
         alert("Task created successfully");
-        // navigate("/history");
       } else {
         alert("Something went wrong");
       }

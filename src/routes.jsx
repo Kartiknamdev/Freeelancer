@@ -49,7 +49,7 @@ export const Router = createBrowserRouter([
         element: withSuspense(BrowseTasks),
       },
       {
-        path: "browse-tasks/:taskId",
+        path: "browse-tasks/:taskId/:createdBy",
         element: withSuspense(TaskInfo),
       },
       { path: "tasks", element: withSuspense(TaskDetails) },

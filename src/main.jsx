@@ -6,15 +6,18 @@ import "./index.css";
 import LoadingScreen from "./components/ui/LoadingScreen.jsx";
 import { TaskProvider } from "./contextStore/task.context.jsx";
 import { AuthProvider } from "./contextStore/auth.context.jsx";
-
+import { MessageProvider } from "./contextStore/message.context.jsx";
+import { BACKEND_URL } from "../constant.js";
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+ 
     <AuthProvider>
       <TaskProvider>
+        <MessageProvider>
         <Suspense fallback={<LoadingScreen />}>
           <RouterProvider router={Router} />
         </Suspense>
+        </MessageProvider>
       </TaskProvider>
     </AuthProvider>
-  </StrictMode>
+
 );
